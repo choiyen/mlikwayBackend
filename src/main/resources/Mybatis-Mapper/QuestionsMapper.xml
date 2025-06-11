@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--XML 문서 버전과 인코딩 선언-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--MyBatics 매퍼 DTO(Document Type Definition)-->
+<mapper namespace="project.MilkyWay.Question.mapper.QuestionsMapper">
+    <select id="findAll" resultType="project.MilkyWay.Question.Entity.QuestionsEntity">
+        SELECT * FROM Question
+    </select>
+    <select id="findAll2" resultType="project.MilkyWay.noticeMain.Notice.Entity.NoticeEntity">
+        SELECT *
+        FROM Question
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+    <select id="findById" parameterType="java.lang.Long" resultType="project.MilkyWay.Question.Entity.QuestionsEntity">
+        SELECT * FROM Question WHERE Id = #{id}
+    </select>
+    <delete id="deleteById" parameterType="java.lang.Long">
+        DELETE FROM Question WHERE Id = #{id}
+    </delete>
+    <insert id="Insert" parameterType="project.MilkyWay.Question.Entity.QuestionsEntity">
+        INSERT INTO Question(exceptionQA, expectedComment) VALUES(#{exceptionQA}, #{expectedComment})
+    </insert>
+    <update id="Update" parameterType="project.MilkyWay.Question.Entity.QuestionsEntity">
+        UPDATE Question SET exceptionQA = #{exceptionQA}, expectedComment = #{expectedComment} WHERE Id = #{id}
+    </update>
+    <!-- 페이징 처리 -->
+    <select id="totalRecord" resultType="java.lang.Long">
+        SELECT count(*) FROM reservation
+    </select>
+</mapper>

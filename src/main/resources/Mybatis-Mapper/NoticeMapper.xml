@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="project.MilkyWay.noticeMain.Notice.mapper.NoticeMapper">
+
+    <!-- 결과 매핑 정의: 암호화 대상 컬럼에만 typeHandler 지정 -->
+    <resultMap id="noticeResultMap" type="project.MilkyWay.noticeMain.Notice.Entity.NoticeEntity">
+        <id     property="noticeId" column="noticeId"/>
+        <result property="type"     column="type"/>
+        <result property="greeting" column="greeting" typeHandler="project.MilkyWay.Config.AESStringTypeHandler"/>
+        <result property="title"    column="title"    typeHandler="project.MilkyWay.Config.AESStringTypeHandler"/>
+        <result property="titleimg" column="titleimg"/>
+    </resultMap>
+
+    <!-- 전체 조회 (페이징 없이) -->
+    <select id="findAll" resultMap="noticeResultMap">
+        SELECT noticeId, type, greeting, title, titleimg
+        FROM Notice
+    </select>
+
+    <!-- 페이징 처리용 전체 조회 -->
+    <select id="findAll2" resultMap="noticeResultMap">
+        SELECT noticeId, type, greeting, title, titleimg
+        FROM Notice
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 타입별 페이징 조회 -->
+    <select id="findByType" resultMap="noticeResultMap" parameterType="project.MilkyWay.noticeMain.Notice.DTO.NoticeSearchCondition">
+        SELECT noticeId, type, greeting, title, titleimg
+        FROM Notice
+        WHERE type = #{type}
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 단건 조회 (복호화 자동 적용) -->
+    <select id="findByNoticeId" parameterType="String" resultMap="noticeResultMap">
+        SELECT noticeId, type, greeting, title, titleimg
+        FROM Notice
+        WHERE noticeId = #{noticeId}
+    </select>
+
+    <!-- 삭제 -->
+    <delete id="deleteByNoticeId" parameterType="String">
+        DELETE FROM Notice
+        WHERE noticeId = #{noticeId}
+    </delete>
+
+    <!-- 생성 (암호화된 컬럼에 typeHandler 지정) -->
+    <insert id="Insert" parameterType="project.MilkyWay.noticeMain.Notice.Entity.NoticeEntity">
+        INSERT INTO Notice(noticeId, type, greeting, title, titleimg)
+        VALUES (
+        #{noticeId},
+        #{type},
+        #{greeting, typeHandler=project.MilkyWay.Config.AESStringTypeHandler},
+        #{title,    typeHandler=project.MilkyWay.Config.AESStringTypeHandler},
+        #{titleimg}
+        )
+    </insert>
+
+    <!-- 수정 (암호화 대상 컬럼에도 typeHandler 지정) -->
+    <update id="Update" parameterType="project.MilkyWay.noticeMain.Notice.Entity.NoticeEntity">
+        UPDATE Notice
+        SET type     = #{type},
+        greeting = #{greeting, typeHandler=project.MilkyWay.Config.AESStringTypeHandler},
+        title    = #{title,    typeHandler=project.MilkyWay.Config.AESStringTypeHandler},
+        titleimg = #{titleimg}
+        WHERE noticeId = #{noticeId}
+    </update>
+
+    <!-- 전체 건수 조회 -->
+    <select id="totalRecord" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM Notice
+    </select>
+
+</mapper>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="project.MilkyWay.Reservation.Mapper.ReservationMapper">
+
+    <!-- 결과 매핑: 복호화 대상 컬럼에만 typeHandler 지정 -->
+    <resultMap id="reservationResultMap" type="project.MilkyWay.Reservation.Entity.ReservationEntity">
+        <id     property="reservationId"   column="reservationId"/>
+        <result property="administrationId" column="administrationId"/>
+        <result property="acreage"          column="acreage"/>
+        <result property="name"             column="name"      typeHandler="project.MilkyWay.Config.AESStringTypeHandler"/>
+        <result property="phone"            column="phone"     typeHandler="project.MilkyWay.Config.AESStringTypeHandler"/>
+        <result property="address"          column="address"   typeHandler="project.MilkyWay.Config.AESStringTypeHandler"/>
+        <result property="subissionDate"   column="subissionDate"/>
+        <result property="type"             column="type"/>
+    </resultMap>
+
+    <!-- 페이징된 전체 조회 -->
+    <select id="findAll" resultMap="reservationResultMap" parameterType="map">
+        SELECT *
+        FROM reservation
+        ORDER BY subissionDate DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 단건 조회 -->
+    <select id="findByReservationId"
+            parameterType="String"
+            resultMap="reservationResultMap">
+        SELECT *
+        FROM reservation
+        WHERE reservationId = #{reservationId}
+    </select>
+
+    <!-- 관리자별 조회 -->
+    <select id="findByAdministrationId"
+            parameterType="String"
+            resultMap="reservationResultMap">
+        SELECT *
+        FROM reservation
+        WHERE administrationId = #{administrationId}
+    </select>
+
+    <!-- 생성: 암호화 대상 컬럼에 typeHandler 지정 -->
+    <insert id="Insert"
+            parameterType="project.MilkyWay.Reservation.Entity.ReservationEntity"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO reservation(
+        reservationId,
+        administrationId,
+        acreage,
+        name,
+        phone,
+        address,
+        subissionDate,
+        type
+        ) VALUES (
+        #{reservationId},
+        #{administrationId},
+        #{acreage},
+        #{name,    typeHandler=project.MilkyWay.Config.AESStringTypeHandler},
+        #{phone,   typeHandler=project.MilkyWay.Config.AESStringTypeHandler},
+        #{address, typeHandler=project.MilkyWay.Config.AESStringTypeHandler},
+        #{subissionDate},
+        #{type}
+        )
+    </insert>
+
+    <!-- 수정: 암호화 대상 컬럼에도 typeHandler 지정 -->
+    <update id="Update"
+            parameterType="project.MilkyWay.Reservation.Entity.ReservationEntity">
+        UPDATE reservation
+        SET acreage        = #{acreage},
+        name           = #{name,    typeHandler=project.MilkyWay.Config.AESStringTypeHandler},
+        phone          = #{phone,   typeHandler=project.MilkyWay.Config.AESStringTypeHandler},
+        address        = #{address, typeHandler=project.MilkyWay.Config.AESStringTypeHandler},
+        subissionDate = #{subissionDate}
+        WHERE reservationId = #{reservationId}
+    </update>
+
+    <!-- 삭제 -->
+    <delete id="deleteByReservationId"
+            parameterType="String">
+        DELETE FROM reservation
+        WHERE reservationId = #{reservationId}
+    </delete>
+
+    <!-- 전체 건수 조회 -->
+    <select id="totalRecord" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM reservation
+    </select>
+
+</mapper>

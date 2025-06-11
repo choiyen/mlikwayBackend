@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="project.MilkyWay.Login.Mapper.UserMapper">
+
+    <!-- 결과 매핑: email만 복호화 -->
+    <resultMap id="userResultMap" type="project.MilkyWay.Login.Entity.UserEntity">
+        <id     property="userId"   column="userId"/>
+        <result property="password" column="password"/>
+        <result property="email"    column="email" typeHandler="project.MilkyWay.Config.AESStringTypeHandler"/>
+    </resultMap>
+
+    <!-- ID로 조회 -->
+    <select id="FindByUserId"
+            parameterType="String"
+            resultMap="userResultMap">
+        SELECT userId,
+        password,
+        email
+        FROM User
+        WHERE userId = #{userId}
+    </select>
+
+    <!-- 이메일로 조회 (파라미터 암호화 필요) -->
+    <select id="FindByEmail"
+            parameterType="String"
+            resultMap="userResultMap">
+        SELECT userId,
+        password,
+        email
+        FROM User
+        WHERE email = #{email, typeHandler=project.MilkyWay.Config.AESStringTypeHandler}
+    </select>
+
+    <!-- 회원 삭제 -->
+    <delete id="deleteByUserId"
+            parameterType="String">
+        DELETE FROM User
+        WHERE userId = #{userId}
+    </delete>
+
+    <!-- 회원가입: password는 PasswordEncoder, email은 AES 암호화 -->
+    <insert id="Insert"
+            parameterType="project.MilkyWay.Login.Entity.UserEntity"
+            useGeneratedKeys="true"
+            keyProperty="userId">
+        INSERT INTO User(userId, password, email)
+        VALUES (
+        #{userId},
+        #{password},
+        #{email, typeHandler=project.MilkyWay.Config.AESStringTypeHandler}
+        )
+    </insert>
+
+    <!-- 회원 정보 수정: password 해시, email AES 암호화 -->
+    <update id="Update"
+            parameterType="project.MilkyWay.Login.Entity.UserEntity">
+        UPDATE User
+        SET password = #{password},
+        email    = #{email, typeHandler=project.MilkyWay.Config.AESStringTypeHandler}
+        WHERE userId = #{userId}
+    </update>
+</mapper>
