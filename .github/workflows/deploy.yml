@@ -38,7 +38,7 @@ jobs:
           password: ${{ secrets.DOCKER_USER_PW }}
 
       - name: 🧱 도커 이미지 빌드
-        run: docker build -t ${{ secrets.DOCKER_USER_NAME }}/${{ secrets.DOCKER_IMAGE_NAME }} .
+        run: docker build -t ${{ secrets.DOCKER_USER_NAME }}/${{ secrets.DOCKER_IMAGE_NAME }} --no-cache .
 
       - name: 📤 도커 이미지 푸시
         run: docker push ${{ secrets.DOCKER_USER_NAME }}/${{ secrets.DOCKER_IMAGE_NAME }}
