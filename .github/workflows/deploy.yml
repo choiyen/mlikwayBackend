@@ -18,7 +18,13 @@ jobs:
       - name: Gradle Wrapper 실행 권한 추가
         run: chmod +x gradlew
       - name: Gradle로 빌드(CI)
-        run: ./gradlew build
+        run: ./gradlew build --info --stacktrace
+      - name: Upload test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: build/reports/tests/test
       - name: 도커허브에 로그인
         uses: docker/login-action@v1
         with:
