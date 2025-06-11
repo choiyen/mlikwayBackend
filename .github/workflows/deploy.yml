@@ -38,10 +38,10 @@ jobs:
           password: ${{ secrets.DOCKER_USER_PW }}
 
       - name: 🧱 도커 이미지 빌드
-        run: docker build -t ${{ secrets.DOCKER_USER_NAME }}/${{ secrets.DOCKER_IMAGE_NAME }}-be .
+        run: docker build -t ${{ secrets.DOCKER_USER_NAME }}/${{ secrets.DOCKER_IMAGE_NAME }} .
 
       - name: 📤 도커 이미지 푸시
-        run: docker push ${{ secrets.DOCKER_USER_NAME }}/${{ secrets.DOCKER_IMAGE_NAME }}-be
+        run: docker push ${{ secrets.DOCKER_USER_NAME }}/${{ secrets.DOCKER_IMAGE_NAME }}
 
       - name: 🚀 EC2에 SSH 접속 후 배포
         uses: appleboy/ssh-action@master
@@ -52,6 +52,6 @@ jobs:
           key: ${{ secrets.AWS_KEY }}
           script: |
             echo "${{ secrets.DOCKER_USER_PW }}" | docker login -u "${{ secrets.DOCKER_USER_NAME }}" --password-stdin
-            docker pull ${{ secrets.DOCKER_USER_NAME }}/${{ secrets.DOCKER_IMAGE_NAME }}-be
+            docker pull ${{ secrets.DOCKER_USER_NAME }}/${{ secrets.DOCKER_IMAGE_NAME }}
             docker-compose down
             docker-compose up -d --build
