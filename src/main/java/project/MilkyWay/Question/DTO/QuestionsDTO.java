@@ -22,7 +22,7 @@ public class QuestionsDTO //고객 질문을 관리하기 위한 DTO
     private Long id; // Q&A 질문을 등록하기 위한 것
 
     @NotBlank(message = "ExceptionQA cannot be empty")
-    @Size(min = 5, max= 100, message = "예상 Q&A의 질문은 최소 다섯자리 이상에 50자리 이하로 입력해야 함.")
+    @Size(min = 5, max= 100, message = "예상 Q&A의 질문은 최소 다섯자리 이상에 50자리 이하로 입력해야 합니다.")
     @Schema(description = "예상 질문", example = "새집증후군 신청 시 추가 요금은 대략 어떻게 정해지나요?")
     @JsonProperty("exceptionQA")
     private  String exceptionQA; // 예상했던 Q&A 질문
