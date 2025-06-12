@@ -52,20 +52,6 @@ jobs:
           key: ${{ secrets.AWS_KEY }}
           script: |
             echo "${{ secrets.DOCKER_USER_PW }}" | docker login -u "${{ secrets.DOCKER_USER_NAME }}" --password-stdin
-
-            cd ~/mlikyway
-
-            echo "SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }}" > .env
-            echo "SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }}" >> .env
-            echo "SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }}" >> .env
-            echo "SPRING_SECURITY_USER=${{ secrets.SPRING_SECURITY_USER }}" >> .env
-            echo "SPRING_SECURITY_PASSWORD=${{ secrets.SPRING_SECURITY_PASSWORD }}" >> .env
-            echo "SPRING_SECURITY_ENCRYPT_KEY=${{ secrets.SPRING_SECURITY_ENCRYPT_KEY }}" >> .env
-            echo "SPRING_CREDENTIALS_ACCESSKEY=${{ secrets.SPRING_CREDENTIALS_ACCESSKEY }}" >> .env
-            echo "SPRING_CREDENTIALS_SECRETKEY=${{ secrets.SPRING_CREDENTIALS_SECRETKEY }}" >> .env
-            echo "SPRING_CREDENTIALS_BUCKETNAME=${{ secrets.SPRING_CREDENTIALS_BUCKETNAME }}" >> .env
-            echo "SPRING_SECRET_URL=${{ secrets.SPRING_SECRET_URL }}" >> .env
-
             docker pull ${{ secrets.DOCKER_USER_NAME }}/${{ secrets.DOCKER_IMAGE_NAME }}
             docker-compose down
-            docker-compose --env-file .env up -d --build
+            docker-compose up -d --build
