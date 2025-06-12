@@ -37,7 +37,7 @@ import java.io.IOException;
 import java.util.*;
 
 @RestController
-@RequestMapping("/notice")
+@RequestMapping("/api/notice")
 @Tag(name = "전체 Notice 정보를 제공하는 Controller")
 public class NoticeController //Notice, Noticedetaill 동시 동작
 {
@@ -418,7 +418,7 @@ public class NoticeController //Notice, Noticedetaill 동시 동작
                     @ApiResponse(responseCode = "404", description = "Notice and Notice Detail List not found")
             }
     )
-    @PostMapping("/api/search")
+    @PostMapping("/search")
     public ResponseEntity<?> FindALl()
     {
         try
