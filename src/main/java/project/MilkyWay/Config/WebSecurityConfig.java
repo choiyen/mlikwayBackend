@@ -41,18 +41,15 @@ public class WebSecurityConfig {
     @Value("${released.URL4}")
     String releaseURL4s;
 
-    @Value("${released.URL5}")
-    String releaseURL5s;
 
+    @PostConstruct
+    public void printUrls() {
+        System.out.println("releasesURL = " + releasesURL);
+        System.out.println("releaseURL2 = " + releaseURL2);
+        System.out.println("releaseURL3s = " + releaseURL3s);
+        System.out.println("releaseURL3s = " + releaseURL4s);
 
-//    @PostConstruct
-//    public void printUrls() {
-//        System.out.println("releasesURL = " + releasesURL);
-//        System.out.println("releaseURL2 = " + releaseURL2);
-//        System.out.println("releaseURL3s = " + releaseURL3s);
-//        System.out.println("releaseURL3s = " + releaseURL4s);
-//
-//    }
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -63,7 +60,7 @@ public class WebSecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/api/auth/**", "/api/board/**", "/api/time/**", "/api/comment/**", "/api/inqurie/**", "/api/notice/**", "/api/question/**", "/api/reserve/**").permitAll()
+                        .requestMatchers("/", "/auth/**", "/board/**", "/time/**", "/comment/**", "/inqurie/**", "/notice/**", "/question/**" ,"/reserve/**").permitAll()
                         .anyRequest().authenticated()
                 );
 
@@ -76,7 +73,7 @@ public class WebSecurityConfig {
 
         config.setAllowCredentials(true);
         // allowedOrigins 수동 설정
-        config.setAllowedOrigins(Arrays.asList(releasesURL,releaseURL2,releaseURL3s,releaseURL4s, releaseURL5s));
+        config.setAllowedOrigins(Arrays.asList(releasesURL,releaseURL2,releaseURL3s,releaseURL4s));
         config.setAllowedMethods(Arrays.asList("HEAD", "POST", "GET", "DELETE", "PUT", "PATCH", "OPTIONS"));
         config.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
         config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));

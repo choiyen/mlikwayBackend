@@ -41,7 +41,7 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 @Tag(name = "유저 정보를 제공하는 Controller")
 public class UserController //관리자 아이디를 관리하는 DTO
 {
@@ -324,7 +324,7 @@ public class UserController //관리자 아이디를 관리하는 DTO
             }
             else
             {
-                return ResponseEntity.ok().body(responseDTO.Response("unlogin", "현재 로그인이 되지 않은 상태입니다. 로그인 페이지로 보내주세요" ));
+               throw new RuntimeException("현재 로그인이 되지 않은 상태입니다. 로그인 페이지로 보내주세요");
             }
         }
         catch (Exception e)

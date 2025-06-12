@@ -28,7 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/time")
+@RequestMapping("/time")
 @Tag(name = "일정 관련 정보를 제공하는  Controller")
 public class AdministrationController
 {

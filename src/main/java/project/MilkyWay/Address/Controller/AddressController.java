@@ -39,7 +39,7 @@ import java.util.List;
 
 @Tag(name = "주소 관련 정보를 제공하는  Controller")
 @RestController
-@RequestMapping("/api/address")
+@RequestMapping("/address")
 public class AddressController {
     @Autowired
     AddressService addressService;

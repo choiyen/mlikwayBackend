@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  frontend:
+    image: worldstory/mikywayfrontend:latest
+    networks:
+      - app-network
+
+  backend:
+    image: worldstory/milkway:latest
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt/live/mlikway.co.kr:/etc/letsencrypt/live/mlikway.co.kr:ro
+      - /etc/letsencrypt/archive/mlikway.co.kr:/etc/letsencrypt/archive/mlikway.co.kr:ro
+      - ./nginx/react-app.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

@@ -37,7 +37,7 @@ import java.io.IOException;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/notice")
+@RequestMapping("/notice")
 @Tag(name = "전체 Notice 정보를 제공하는 Controller")
 public class NoticeController //Notice, Noticedetaill 동시 동작
 {
