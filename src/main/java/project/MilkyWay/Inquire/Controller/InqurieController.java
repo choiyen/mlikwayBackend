@@ -30,7 +30,7 @@ import java.util.Collections;
 import java.util.List;
 
 @RestController
-@RequestMapping("/inqurie")
+@RequestMapping("/api/inqurie")
 @Tag(name = "Inquire 관련 정보를 제공하는 Controller")
 public class InqurieController
 {

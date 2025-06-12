@@ -418,7 +418,7 @@ public class NoticeController //Notice, Noticedetaill 동시 동작
                     @ApiResponse(responseCode = "404", description = "Notice and Notice Detail List not found")
             }
     )
-    @PostMapping("/search")
+    @PostMapping("/api/search")
     public ResponseEntity<?> FindALl()
     {
         try

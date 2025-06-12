@@ -30,7 +30,7 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/question")
+@RequestMapping("/api/question")
 @Tag(name = "예시 질문 정보를 제공하는 Controller")
 public class QuestionsController //고객 질문을 관리하기 위한 DTO
 {//1차 Test 완료 - 보안 설정 후 재테스트

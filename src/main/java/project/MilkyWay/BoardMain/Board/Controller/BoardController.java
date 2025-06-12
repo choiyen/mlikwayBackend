@@ -33,7 +33,7 @@ import java.util.Collections;
 import java.util.List;
 
 @RestController
-@RequestMapping("/board")
+@RequestMapping("/api/board")
 @Tag(name = "게시판 관련 정보를 제공하는  Controller")
 public class BoardController
 {//1차 Test 완료

@@ -35,7 +35,7 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/comment")
+@RequestMapping("/api/comment")
 @Tag(name = "댓글 관련 정보를 제공하는 Controller")
 public class CommentController
 {
