@@ -41,14 +41,17 @@ public class WebSecurityConfig {
     @Value("${released.URL4}")
     String releaseURL4s;
 
+    @Value("${released.URL5}")
+    String releaseURL5s;
+
 
     @PostConstruct
     public void printUrls() {
         System.out.println("releasesURL = " + releasesURL);
         System.out.println("releaseURL2 = " + releaseURL2);
         System.out.println("releaseURL3s = " + releaseURL3s);
-        System.out.println("releaseURL3s = " + releaseURL4s);
-
+        System.out.println("releaseURL4s = " + releaseURL4s);
+        System.out.println("releaseURL5s = " + releaseURL5s);
     }
 
     @Bean
@@ -73,7 +76,7 @@ public class WebSecurityConfig {
 
         config.setAllowCredentials(true);
         // allowedOrigins 수동 설정
-        config.setAllowedOrigins(Arrays.asList(releasesURL,releaseURL2,releaseURL3s,releaseURL4s));
+        config.setAllowedOrigins(Arrays.asList(releasesURL,releaseURL2,releaseURL3s,releaseURL4s, releaseURL5s));
         config.setAllowedMethods(Arrays.asList("HEAD", "POST", "GET", "DELETE", "PUT", "PATCH", "OPTIONS"));
         config.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
         config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
