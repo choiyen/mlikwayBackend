@@ -1,33 +1,22 @@
 package project.MilkyWay.Config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
-@EnableWebSecurity
 public class WebSecurityConfig {
-
 
     @Value("${released.URL}")
     String releasesURL;
@@ -44,7 +33,6 @@ public class WebSecurityConfig {
     @Value("${released.URL5}")
     String releaseURL5s;
 
-
     @PostConstruct
     public void printUrls() {
         System.out.println("releasesURL = " + releasesURL);
@@ -59,24 +47,49 @@ public class WebSecurityConfig {
         http
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
-                .formLogin(Customizer.withDefaults()) // 필터 활성화 목적
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                // 폼 로그인 비활성화(필요시 api 로그인 구현 필요)
+                .formLogin(form -> form.disable())
+                // 세션 정책 설정
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                // 인증 실패 시 리다이렉트 대신 401 에러 응답
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.getWriter().write("{\"error\":\"Unauthorized\"}");
+                        })
+                )
+                // 요청 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/api/auth/**", "/api/board/**", "/api/time/**", "/api/comment/**", "/api/inqurie/**", "/api/notice/**", "/api/question/**" ,"/api/reserve/**").permitAll()
+                        .requestMatchers(
+                                "/",
+                                "/api/auth/**",
+                                "/api/board/**",
+                                "/api/time/**",
+                                "/api/comment/**",
+                                "/api/inqurie/**",
+                                "/api/notice/**",
+                                "/api/question/**",
+                                "/api/reserve/**"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 );
 
         return http.build();
     }
-    // cors 설정 정의
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowCredentials(true);
-        // allowedOrigins 수동 설정
-        config.setAllowedOrigins(Arrays.asList(releasesURL,releaseURL2,releaseURL3s,releaseURL4s, releaseURL5s));
+        config.setAllowedOrigins(Arrays.asList(
+                releasesURL,
+                releaseURL2,
+                releaseURL3s,
+                releaseURL4s,
+                releaseURL5s
+        ));
         config.setAllowedMethods(Arrays.asList("HEAD", "POST", "GET", "DELETE", "PUT", "PATCH", "OPTIONS"));
         config.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
         config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
