@@ -36,8 +36,12 @@ public class S3ImageService {
     @Value("${cloud.aws.s3.bucketName}")
     private String bucketName;
 
+
+
     //실제로 업로드를 담당하는 기능 -> 파일이 없을 때 null을 반환함.
     public String upload(MultipartFile image) {
+
+        System.out.println(bucketName);
         if (image.isEmpty() || Objects.isNull(image.getOriginalFilename())) {
             throw new S3Exception(ErrorCode.EMPTY_FILE_EXCEPTION);
         }

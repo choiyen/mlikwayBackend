@@ -49,7 +49,7 @@ public class UserService //관리자 아이디를 관리하는 DTO
       }
       else
       {
-          throw new FindFailedException("관리자 아이디 생성에 실패하였습니다.");
+          throw new FindFailedException("아이디나 비밀번호가 틀렸거나, 가입된 관리자 계정이 없습니다.");
       }
   }
 
