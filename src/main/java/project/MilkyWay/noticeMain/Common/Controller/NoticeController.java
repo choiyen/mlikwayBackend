@@ -23,6 +23,7 @@ import project.MilkyWay.ComonType.Enum.CleanType;
 import project.MilkyWay.ComonType.Expection.*;
 import project.MilkyWay.ComonType.LoginSuccess;
 import project.MilkyWay.Config.SessionManager;
+import project.MilkyWay.S3ClientService.MultiS3ImageService;
 import project.MilkyWay.S3ClientService.S3ImageService;
 import project.MilkyWay.noticeMain.Common.DTO.NoticeJsonDTO;
 import project.MilkyWay.noticeMain.Common.DTO.TypeDTO;
@@ -30,11 +31,13 @@ import project.MilkyWay.noticeMain.Notice.DTO.NoticeDTO;
 import project.MilkyWay.noticeMain.NoticeDetail.DTO.NoticeDetailDTO;
 import project.MilkyWay.noticeMain.NoticeDetail.Entity.NoticeDetailEntity;
 import project.MilkyWay.noticeMain.Notice.Entity.NoticeEntity;
+import project.MilkyWay.noticeMain.NoticeDetail.Service.MultiNoticeDetailService;
 import project.MilkyWay.noticeMain.NoticeDetail.Service.NoticeDetailService;
 import project.MilkyWay.noticeMain.Notice.Service.NoticeService;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/notice")
@@ -52,6 +55,13 @@ public class NoticeController //Notice, Noticedetaill 동시 동작
     private S3ImageService s3ImageService;
 
     private final ResponseDTO<Object> responseDTO = new ResponseDTO<>();
+
+
+    @Autowired
+    private MultiNoticeDetailService multiNoticeDetailService;
+
+    @Autowired
+    private MultiS3ImageService multiS3ImageService;
 
     LoginSuccess loginSuccess = new LoginSuccess();
 
@@ -85,7 +95,6 @@ public class NoticeController //Notice, Noticedetaill 동시 동작
             if(loginSuccess.isSessionExist(request))
             {
                 String uniqueId;
-                LoginSuccess loginSuccess = new LoginSuccess();
                 do
                 {
                     uniqueId = loginSuccess.generateRandomId(15);
@@ -110,47 +119,22 @@ public class NoticeController //Notice, Noticedetaill 동시 동작
                     // 파일 처리 — key 별로 파일 리스트 얻기
                     Iterator<String> fileNames = multiRequest.getFileNames();
                     Map<String, List<String>> uploadedFileUrls = new HashMap<>();
-
+                    Map<String, CompletableFuture<List<String>>> futureMap = new HashMap<>();
                     while (fileNames.hasNext()) {
                         String key = fileNames.next();
                         List<MultipartFile> files = multiRequest.getFiles(key);
-                        List<String> urlList = new ArrayList<>();
-
-                        for (MultipartFile file : files) {
-                            String filename = file.getOriginalFilename();
-
-                            if (filename == null || !filename.contains(".")) {
-                                throw new RuntimeException("No file extension found");
-                            }
-
-                            try {
-                                urlList.add(uploading(file));
-                            } catch (Exception ex) {
-                                ex.printStackTrace();
-                                throw new RuntimeException("업로드 실패");
-                            }
-                        }
-
-                        uploadedFileUrls.put(key, urlList);
+                        CompletableFuture<List<String>> sData = multiS3ImageService.S3Import(files);
+                        futureMap.put(key, sData);
                     }
 
-                    while (i < noticeJsonDTO.getNoticeDetailDTO().size() )
-                    {
-                        List<String> beforeUrls = uploadedFileUrls.getOrDefault("before_" + i, new ArrayList<>());
-                        List<String> afterUrls  = uploadedFileUrls.getOrDefault("after_" + i, new ArrayList<>());
-                        NoticeDetailEntity noticeDetailEntity = ConvertToNoticeDetail(noticeJsonDTO.getNoticeDetailDTO().get(i),noticeEntity.getNoticeId(), beforeUrls, afterUrls );
-                        NoticeDetailEntity noticeDetailEntity1 = noticeDetailService.InsertNoticeDetallMapper(noticeDetailEntity);
-                        if(noticeDetailEntity1 != null)
-                        {
-                            noticeDetailEntities.add(noticeDetailEntity1);
+                    for (Map.Entry<String, CompletableFuture<List<String>>> entry : futureMap.entrySet()) {
+                        try {
+                            uploadedFileUrls.put(entry.getKey(), entry.getValue().get()); // 기다림은 여기서만
+                        } catch (Exception e) {
+                            e.printStackTrace(); // 적절한 예외 처리
                         }
-                        else
-                        {
-                            noticeService.DeleteByNoticeId(notice1.getNoticeId());
-                            throw new InsertFailedException("데이터 저장에 실패했습니다.");
-                        }
-                        i++;
                     }
+                    noticeDetailEntities.addAll(multiNoticeDetailService.S3Import(noticeJsonDTO.getNoticeDTO().getNoticeId(), noticeJsonDTO.getNoticeDetailDTO(), uploadedFileUrls).get());
                     List<Object> list = new ArrayList<>();
                     list.add(notice1);
                     list.add(noticeDetailEntities);
