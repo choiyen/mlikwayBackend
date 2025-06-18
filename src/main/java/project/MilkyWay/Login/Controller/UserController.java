@@ -312,7 +312,7 @@ public class UserController //관리자 아이디를 관리하는 DTO
     {
         try
         {
-            System.out.println("Login check");
+
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
             if (loginSuccess.isSessionExist(request) && authentication != null && authentication.isAuthenticated())

@@ -19,7 +19,6 @@ public class MultiS3ImageService
     @Async("taskExecutor")  // ThreadPoolConfig에서 정의한 이름
     public CompletableFuture<List<String>> S3Import(List<MultipartFile> flies)
     {
-        System.out.println("Async method started by thread: " + Thread.currentThread().getName());
         List<String> S3ImageURL = new ArrayList<>();
         try
         {
@@ -37,7 +36,6 @@ public class MultiS3ImageService
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-        System.out.println("Async method finished");
         return CompletableFuture.completedFuture(S3ImageURL);
     }
 }

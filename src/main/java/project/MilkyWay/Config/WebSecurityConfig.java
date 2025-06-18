@@ -44,16 +44,6 @@ public class WebSecurityConfig {
     @Value("${released.URL5}")
     String releaseURL5s;
 
-
-    @PostConstruct
-    public void printUrls() {
-        System.out.println("releasesURL = " + releasesURL);
-        System.out.println("releaseURL2 = " + releaseURL2);
-        System.out.println("releaseURL3s = " + releaseURL3s);
-        System.out.println("releaseURL4s = " + releaseURL4s);
-        System.out.println("releaseURL5s = " + releaseURL5s);
-    }
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http

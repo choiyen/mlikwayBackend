@@ -183,14 +183,13 @@ public class NoticeController //Notice, Noticedetaill 동시 동작
                 NoticeEntity oldnotice = noticeService.findNoticeId(noticeJsonDTO.getNoticeDTO().getNoticeId());
 
                 String Titleurl;
-                if (titleimg != null && !titleimg.isEmpty()) {
-                    // 새 파일 업로드
+                if (titleimg != null && !titleimg.isEmpty())
+                {
                     Titleurl = uploading(titleimg);
                     FileDelete(oldnotice.getTitleimg());
                 }
                 else
                 {
-                    // 기존 링크 그대로 사용
                     Titleurl = noticeJsonDTO.getNoticeDTO().getTitleimg();
                 }
 
@@ -224,19 +223,36 @@ public class NoticeController //Notice, Noticedetaill 동시 동작
                                 throw new RuntimeException("No file extension found");
                             }
 
-                            try {
-                                if (file != null && !file.isEmpty()) {
+                            try
+                            {
+                                NoticeDetailEntity noticeDetailEntity = noticeDetailService.noticeDetail(noticeJsonDTO.getNoticeDetailDTO().get(index).getNoticeDetailId());
+                                if (file != null && !file.isEmpty())
+                                {
+                                    if(type.equals("before"))
+                                    {
+                                        if(noticeDetailEntity.getBeforeURL().get(fileIndex) != null)
+                                        {
+                                            System.out.println("Delete Image : " + noticeDetailEntity.getBeforeURL().get(fileIndex));
+                                            FileDelete(noticeDetailEntity.getBeforeURL().get(fileIndex));
+                                        }
+                                    }
+                                    else if(type.equals("after"))
+                                    {
+                                        if(noticeDetailEntity.getBeforeURL().get(fileIndex) != null) {
+                                            System.out.println("Delete Image : " + noticeDetailEntity.getAfterURL().get(fileIndex));
+                                            FileDelete(noticeDetailEntity.getAfterURL().get(fileIndex));
+                                        }
+                                    }
                                     urlList.add(uploading(file));
                                 }
                                 else
                                 {
                                     String existUrl = null;
-                                    if (type.equals("before")) {
+                                    if (type.equals("before"))
+                                    {
                                         existUrl = noticeJsonDTO.getNoticeDetailDTO().get(index).getBeforeURL().get(fileIndex);
-                                        System.out.println(existUrl);
                                     } else if (type.equals("after")) {
                                         existUrl = noticeJsonDTO.getNoticeDetailDTO().get(index).getAfterURL().get(fileIndex);
-                                        System.out.println(existUrl);
                                     }
                                     urlList.add(existUrl);
                                 }
@@ -257,8 +273,6 @@ public class NoticeController //Notice, Noticedetaill 동시 동작
                         if(noticeJsonDTO.getNoticeDetailDTO().get(i).getNoticeDetailId() != null )
                         {
                             NoticeDetailEntity noticeDetailEntity = noticeDetailService.noticeDetail(noticeJsonDTO.getNoticeDetailDTO().get(i).getNoticeDetailId());
-                            FileDelete(noticeDetailEntity.getBeforeURL());
-                            FileDelete(noticeDetailEntity.getAfterURL());
                             NoticeDetailEntity noticeDetailEntity1 = noticeDetailService.UpdateNoticeDetailMapper(noticeJsonDTO.getNoticeDetailDTO().get(i).getNoticeDetailId(), ConvertToNoticeDetail(noticeJsonDTO.getNoticeDetailDTO().get(i), beforeUrls,afterUrls));
                             if(noticeDetailEntity1 != null)
                             {

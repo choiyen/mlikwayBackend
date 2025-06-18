@@ -41,7 +41,6 @@ public class S3ImageService {
     //실제로 업로드를 담당하는 기능 -> 파일이 없을 때 null을 반환함.
     public String upload(MultipartFile image) {
 
-        System.out.println(bucketName);
         if (image.isEmpty() || Objects.isNull(image.getOriginalFilename())) {
             throw new S3Exception(ErrorCode.EMPTY_FILE_EXCEPTION);
         }
@@ -112,6 +111,7 @@ public class S3ImageService {
     //로컬 주소를 삭제하는 기능
     private String getKeyFromImageAddress(String imageAddress) {
         try {
+            System.out.println(imageAddress);
             if (imageAddress == null || !imageAddress.startsWith("http")) {
                 throw new RuntimeException("S3 URL 아님, 오류가 발생하였습니다.");
             }
