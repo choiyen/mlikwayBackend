@@ -34,7 +34,7 @@ public class MultiNoticeDetailService
     }
 
     @Async("taskExecutor")
-    public CompletableFuture<List<NoticeDetailEntity>> S3Import(String NoticeId, List<NoticeDetailDTO> noticeDetailDTOS, Map<String, List<String>> uploadedFileUrls) {
+    public CompletableFuture<List<NoticeDetailEntity>> S3Import(String noticeId, List<NoticeDetailDTO> noticeDetailDTOS, Map<String, List<String>> uploadedFileUrls) {
         List<CompletableFuture<NoticeDetailEntity>> futures = new ArrayList<>();
 
         for (int i = 0; i < noticeDetailDTOS.size(); i++) {
@@ -43,8 +43,9 @@ public class MultiNoticeDetailService
                 List<String> beforeUrls = uploadedFileUrls.getOrDefault("before_" + index, new ArrayList<>());
                 List<String> afterUrls  = uploadedFileUrls.getOrDefault("after_" + index, new ArrayList<>());
 
-                NoticeDetailEntity noticeDetailEntity = ConvertToNoticeDetail(noticeDetailDTOS.get(index), NoticeId, beforeUrls, afterUrls);
+                NoticeDetailEntity noticeDetailEntity = ConvertToNoticeDetail(noticeDetailDTOS.get(index), noticeId, beforeUrls, afterUrls);
                 NoticeDetailEntity savedEntity = noticeDetailService.InsertNoticeDetallMapper(noticeDetailEntity);
+                System.out.println(savedEntity);
 
                 if (savedEntity == null) {
                     // DB 저장 실패 시 예외 발생
@@ -55,6 +56,7 @@ public class MultiNoticeDetailService
             }, taskExecutor);
 
             futures.add(future);
+            System.out.println(futures);
         }
 
         // 모든 작업이 끝날 때까지 기다리고 결과 리스트로 변환

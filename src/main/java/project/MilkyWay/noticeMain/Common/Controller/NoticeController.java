@@ -134,7 +134,7 @@ public class NoticeController //Notice, Noticedetaill 동시 동작
                             e.printStackTrace(); // 적절한 예외 처리
                         }
                     }
-                    noticeDetailEntities.addAll(multiNoticeDetailService.S3Import(noticeJsonDTO.getNoticeDTO().getNoticeId(), noticeJsonDTO.getNoticeDetailDTO(), uploadedFileUrls).get());
+                    noticeDetailEntities.addAll(multiNoticeDetailService.S3Import(notice1.getNoticeId(), noticeJsonDTO.getNoticeDetailDTO(), uploadedFileUrls).get());
                     List<Object> list = new ArrayList<>();
                     list.add(notice1);
                     list.add(noticeDetailEntities);
