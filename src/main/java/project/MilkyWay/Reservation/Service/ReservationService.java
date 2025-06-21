@@ -2,8 +2,11 @@ package project.MilkyWay.Reservation.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import project.MilkyWay.Administration.DTO.AdministrationDTO;
 import project.MilkyWay.Administration.Entity.AdministrationEntity;
 import project.MilkyWay.Administration.Service.AdministrationService;
+import project.MilkyWay.ComonType.LoginSuccess;
+import project.MilkyWay.Reservation.DTO.ReservationDTO;
 import project.MilkyWay.Reservation.Entity.ReservationEntity;
 import project.MilkyWay.ComonType.Enum.DateType;
 import project.MilkyWay.ComonType.Expection.DeleteFailedException;
@@ -13,6 +16,7 @@ import project.MilkyWay.ComonType.Expection.UpdateFailedException;
 import project.MilkyWay.Reservation.Mapper.ReservationMapper;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -25,16 +29,27 @@ public class ReservationService //고객의 예약을 관리하기 위한 DTO
     @Autowired
     AdministrationService administrationService;
 
-    public ReservationEntity SelectAdminstrationID(String AdiminstrationId)
+    public ReservationDTO SelectAdminstrationID(String AdiminstrationId)
     {
         ReservationEntity reservationEntity = reservationMapper.findByAdministrationId(AdiminstrationId);
-            return reservationEntity;
+            return ConvertToDTO(reservationEntity);
 
     }
 
-    public ReservationEntity InsertReservation(ReservationEntity reservationEntity)
+    public ReservationDTO InsertReservation(ReservationDTO reservationDTO)
     {
-
+        String uniqueId;
+        LoginSuccess loginSuccess = new LoginSuccess();
+        do
+        {
+            uniqueId = loginSuccess.generateRandomId(15);
+            ReservationDTO reservationDTO1 = SelectAdminstrationID(uniqueId);
+            if(reservationDTO1 == null)
+            {
+                break;
+            }
+        }while (true);
+        ReservationEntity reservationEntity = ConvertToEntity(reservationDTO, uniqueId);
         AdministrationEntity administration = administrationService.FindByAdministrationDate(reservationEntity.getSubissionDate());
         ReservationEntity reservationEntity1;
         if(administration!= null)
@@ -55,12 +70,12 @@ public class ReservationService //고객의 예약을 관리하기 위한 DTO
                 }
                 else
                 {
-                    AdministrationEntity administrationEntity2 = AdministrationEntity.builder()
+                    AdministrationDTO administrationDTO = AdministrationDTO.builder()
                             .administrationId(administration.getAdministrationId())
                             .adminstrationType(DateType.예약)
                             .administrationDate(administration.getAdministrationDate())
                             .build();
-                    administrationService.Update(administrationEntity2);
+                    administrationService.Update(administrationDTO);
                     reservationEntity1 = ReservationEntity.builder()
                             .type(reservationEntity.getType())
                             .reservationId(reservationEntity.getReservationId())
@@ -76,12 +91,12 @@ public class ReservationService //고객의 예약을 관리하기 위한 DTO
         }
         else
         {
-            AdministrationEntity administrationEntity = AdministrationEntity.builder()
+            AdministrationDTO administrationDTO = AdministrationDTO.builder()
                     .administrationId(reservationEntity.getAdministrationId())
                     .adminstrationType(DateType.예약)
                     .administrationDate(reservationEntity.getSubissionDate())
                     .build();
-            administrationService.insert(administrationEntity);
+            administrationService.insert(administrationDTO);
             reservationEntity1 = ReservationEntity.builder()
                     .type(reservationEntity.getType())
                     .reservationId(reservationEntity.getReservationId())
@@ -105,9 +120,10 @@ public class ReservationService //고객의 예약을 관리하기 위한 DTO
         }
 
         ReservationEntity reservationEntity2 = reservationMapper.findByReservationId(reservationEntity.getReservationId());
+
         if(reservationEntity2 != null)
         {
-            return reservationEntity2;
+            return ConvertToDTO(reservationEntity2);
         }
         else
         {
@@ -139,9 +155,9 @@ public class ReservationService //고객의 예약을 관리하기 위한 DTO
         }
 
     }
-    public ReservationEntity SaveReservation(ReservationEntity reservationEntity)
+    public ReservationDTO SaveReservation(ReservationDTO reservationDTO)
     {
-
+             ReservationEntity reservationEntity = ConvertToEntity(reservationDTO);
             AdministrationEntity administrationEntity = administrationService.FindByAdministrationDate(reservationEntity.getSubissionDate());
             //Id에 해당하는 날짜는 기존 날짜를 가르킬 테니 뺴고, 변경할 날짜에 일정이 일하는 일정이 있는지 여부를 확인
 
@@ -159,13 +175,13 @@ public class ReservationService //고객의 예약을 관리하기 위한 DTO
                 if(Oldreservation != null)
                 {
                     ReservationEntity ChangeReservation = ChangeReservation(Oldreservation, reservationEntity);
-                    AdministrationEntity administrationEntity2 = AdministrationEntity
+                    AdministrationDTO administrationDTO = AdministrationDTO
                             .builder()
                             .administrationId(Oldreservation.getAdministrationId())
                             .adminstrationType(DateType.업무)
                             .administrationDate(reservationEntity.getSubissionDate())
                             .build();
-                    AdministrationEntity administration = administrationService.Update(administrationEntity2);
+                    AdministrationDTO administration = administrationService.Update(administrationDTO);
                     if(administration == null)
                     {
                         throw new UpdateFailedException("일정 정보 업데이트 도중 오류가 발생했습니다.");
@@ -179,7 +195,7 @@ public class ReservationService //고객의 예약을 관리하기 위한 DTO
                         boolean check = reservationEntity2.equals(ChangeReservation);
                         if(check)
                         {
-                            return reservationEntity2;
+                            return ConvertToDTO(reservationEntity2);
                         }
                         else
                         {
@@ -195,13 +211,17 @@ public class ReservationService //고객의 예약을 관리하기 위한 DTO
     }//기능 변경 고민을 제외하면 완료
 
 
-    public ReservationEntity ReservationSelect(String reservationId)
+    public ReservationDTO ReservationSelect(String reservationId)
     {
-        return reservationMapper.findByReservationId(reservationId);
+        return ConvertToDTO(reservationMapper.findByReservationId(reservationId));
     }
-    public List<ReservationEntity> ListReservation(int page)
+    public List<ReservationDTO> ListReservation(int page)
     {
-        return reservationMapper.findAll(page, 100);
+        List<ReservationDTO> reservationDTOS = new ArrayList<>();
+        for (ReservationEntity reservationEntity : reservationMapper.findAll(page, 100)) {
+            reservationDTOS.add(ConvertToDTO(reservationEntity));
+        }
+        return reservationDTOS;
     }
     public Long totalRecord() {
         return reservationMapper.totalRecord();
@@ -224,6 +244,46 @@ public class ReservationService //고객의 예약을 관리하기 위한 DTO
                 .phone(newReservation.getPhone())
                 .reservationId(OldReservation.getReservationId())
                 .type(newReservation.getType())
+                .build();
+    }
+
+    private ReservationDTO ConvertToDTO(ReservationEntity reservationEntity2)
+    {
+        return ReservationDTO.builder()
+                .reservationId(reservationEntity2.getReservationId())
+                .administrationId(reservationEntity2.getReservationId())
+                .phone(reservationEntity2.getPhone())
+                .address(reservationEntity2.getAddress())
+                .name(reservationEntity2.getName())
+                .acreage(reservationEntity2.getAcreage())
+                .subissionDate(reservationEntity2.getSubissionDate())
+                .type(reservationEntity2.getType())
+                .build();
+    }
+
+    private ReservationEntity ConvertToEntity(ReservationDTO reservationDTO)
+    {
+        return ReservationEntity.builder()
+                .reservationId(reservationDTO.getReservationId())
+                .administrationId(reservationDTO.getAdministrationId())
+                .phone(reservationDTO.getPhone())
+                .address(reservationDTO.getAddress())
+                .name(reservationDTO.getName())
+                .acreage(reservationDTO.getAcreage())
+                .subissionDate(reservationDTO.getSubissionDate())
+                .type(reservationDTO.getType())
+                .build();
+    }
+    private ReservationEntity ConvertToEntity(ReservationDTO reservationDTO, String uniqueId) {
+        return ReservationEntity.builder()
+                .reservationId(uniqueId)
+                .administrationId(uniqueId)
+                .phone(reservationDTO.getPhone())
+                .address(reservationDTO.getAddress())
+                .name(reservationDTO.getName())
+                .acreage(reservationDTO.getAcreage())
+                .subissionDate(reservationDTO.getSubissionDate())
+                .type(reservationDTO.getType())
                 .build();
     }
 }

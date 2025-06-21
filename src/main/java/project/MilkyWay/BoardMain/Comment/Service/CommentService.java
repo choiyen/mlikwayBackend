@@ -1,11 +1,14 @@
 package project.MilkyWay.BoardMain.Comment.Service;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import project.MilkyWay.BoardMain.Board.Repository.BoardRepository;
+import project.MilkyWay.BoardMain.Comment.DTO.CommentDTO;
 import project.MilkyWay.BoardMain.Comment.Entity.CommentEntity;
+import project.MilkyWay.ComonType.Enum.UserType;
 import project.MilkyWay.ComonType.Expection.DeleteFailedException;
 import project.MilkyWay.ComonType.Expection.FindFailedException;
 import project.MilkyWay.ComonType.Expection.UpdateFailedException;
@@ -25,13 +28,14 @@ public class CommentService
     BoardRepository boardRepository;
 
 
-    public CommentEntity Insert(CommentEntity comment)
+    public CommentDTO Insert(CommentDTO comment, String commentType)
     {
 
-            boolean bool = boardRepository.existsByBoardId(comment.getBoardId());
+             CommentEntity commentEntity = ConvertToCommentEntity(comment, commentType);
+             boolean bool = boardRepository.existsByBoardId(comment.getBoardId());
             if(bool)
             {
-                return commentRepository.save(comment);
+                return ConvertToCommentDTO(commentRepository.save(commentEntity));
             }
             else
             {
@@ -39,17 +43,18 @@ public class CommentService
             }
 
     }
-    public CommentEntity Update(Long EncodingcommentId, CommentEntity comment)
+    public CommentDTO Update(CommentDTO comment)
     {
 
-           CommentEntity commentEntity = commentRepository.findByCommentId(EncodingcommentId);
+        CommentEntity commentEntity = ConvertToCommentEntity(comment);
+        CommentEntity oldComment = commentRepository.findByCommentId(comment.getCommentId());
            if(commentEntity != null)
            {
-                CommentEntity UpdateComment = ConvertToEntity(commentEntity, comment);
+                CommentEntity UpdateComment = ConvertToEntity(oldComment, commentEntity);
                 CommentEntity commentEntity1 = commentRepository.save(UpdateComment);
                 CommentEntity ChangeCommentEntity = commentRepository.findByCommentId(commentEntity1.getCommentId());
                 if(ChangeCommentEntity.equals(commentEntity1)) {
-                    return commentEntity1;
+                    return ConvertToCommentDTO(commentEntity1);
                 }
                 else
                 {
@@ -75,12 +80,12 @@ public class CommentService
             throw new DeleteFailedException("해당 CommentId를 가진 질문이 존재하지 않습니다.");
         }
     }
-    public CommentEntity FindByCommentId(Long EnCodingCommentId)
+    public CommentDTO FindByCommentId(Long EnCodingCommentId)
     {
         CommentEntity commentEntity = commentRepository.findByCommentId(EnCodingCommentId);
         if(commentEntity != null)
         {
-            return commentEntity;
+            return ConvertToCommentDTO(commentEntity);
         }
         else
         {
@@ -88,7 +93,7 @@ public class CommentService
         }
 
     }
-    public List<CommentEntity> FindByBoardId(String EnCodingBoardId, boolean bool)
+    public List<CommentDTO> FindByBoardId(String EnCodingBoardId, boolean bool)
     {
         List<CommentEntity> commentEntities = new ArrayList<>(commentRepository.findByBoardId(EnCodingBoardId));
 
@@ -99,7 +104,13 @@ public class CommentService
 
         if(commentEntities != null)
         {
-            return commentEntities;
+            List<CommentDTO> commentDTOS = new ArrayList<>();
+            for(CommentEntity comment : commentEntities)
+            {
+                commentDTOS.add(ConvertToCommentDTO(comment));
+            }
+
+            return commentDTOS;
         }
         else
         {
@@ -114,6 +125,39 @@ public class CommentService
                 .comment(newcomment.getComment())
                 .type(Oldcomment.getType())
                 .createdAt(newcomment.getCreatedAt())
+                .build();
+    }
+
+
+    private CommentDTO ConvertToCommentDTO(CommentEntity comment)
+    {
+        return CommentDTO.builder()
+                .type(UserType.valueOf(comment.getType()))
+                .commentId(comment.getCommentId())
+                .boardId(comment.getBoardId())
+                .comment(comment.getComment())
+                .createdAt(comment.getCreatedAt())
+                .build();
+    }
+
+    private CommentEntity ConvertToCommentEntity(@Valid CommentDTO commentDTO)
+    {
+        return CommentEntity.builder()
+                .type(String.valueOf(commentDTO.getType()))
+                .commentId(commentDTO.getCommentId())
+                .boardId(commentDTO.getBoardId())
+                .comment(commentDTO.getComment())
+                .createdAt(commentDTO.getCreatedAt())
+                .build();
+    }
+    private CommentEntity ConvertToCommentEntity(@Valid CommentDTO commentDTO, String provider)
+    {
+        return CommentEntity.builder()
+                .type(provider)
+                .commentId(commentDTO.getCommentId())
+                .boardId(commentDTO.getBoardId())
+                .comment(commentDTO.getComment())
+                .createdAt(commentDTO.getCreatedAt())
                 .build();
     }
 

@@ -61,23 +61,9 @@ public class ReservationController //고객의 예약을 관리하기 위한 DTO
 
 
 
-            String uniqueId;
-            LoginSuccess loginSuccess = new LoginSuccess();
-            do
-            {
-                uniqueId = loginSuccess.generateRandomId(15);
-                ReservationEntity reservationEntity = reservationService.SelectAdminstrationID(uniqueId);
-                if(reservationEntity == null)
+                ReservationDTO reservationDTO1 = reservationService.InsertReservation(reservationDTO);
+                if (reservationDTO1 != null)
                 {
-                    break;
-                }
-            }while (true);
-
-                ReservationEntity reservationEntity = ConvertToEntity(reservationDTO, uniqueId);
-                ReservationEntity reservationEntity2 = reservationService.InsertReservation(reservationEntity);
-                if (reservationEntity2 != null)
-                {
-                    ReservationDTO reservationDTO1 = ConvertToDTO(reservationEntity2);
                     return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO.Response("success", "데이터 추가에 성공하였습니다.", Collections.singletonList(reservationDTO1)));
                 }
                 else
@@ -109,10 +95,8 @@ public class ReservationController //고객의 예약을 관리하기 위한 DTO
         {
             if(loginSuccess.isSessionExist(request))
             {
-                ReservationEntity reservationEntity = ConvertToEntity(reservationDTO);
-                ReservationEntity reservationEntity2 = reservationService.SaveReservation(reservationEntity);
-                if (reservationEntity2 != null) {
-                    ReservationDTO reservationDTO1 = ConvertToDTO(reservationEntity2);
+                ReservationDTO reservationDTO1 = reservationService.SaveReservation(reservationDTO);
+                if (reservationDTO1 != null) {
                     return ResponseEntity.ok().body(responseDTO.Response("success", "데이터 수정에 성공하였습니다.", Collections.singletonList(reservationDTO1)));
                 }
                 else
@@ -189,11 +173,7 @@ public class ReservationController //고객의 예약을 관리하기 위한 DTO
             if(loginSuccess.isSessionExist(request))
             {
 
-                List<ReservationEntity> reservationEntities = reservationService.ListReservation(page);
-                List<ReservationDTO> reservationDTOS = new ArrayList<>();
-                for (ReservationEntity reservationEntity : reservationEntities) {
-                    reservationDTOS.add(ConvertToDTO(reservationEntity));
-                }
+                List<ReservationDTO> reservationDTOS = reservationService.ListReservation(page);
                 if (reservationDTOS.isEmpty())
                 {
                     return ResponseEntity.ok().body(responseDTO.Response("empty","데이터베이스에 내용은 비어있음"));
@@ -235,11 +215,10 @@ public class ReservationController //고객의 예약을 관리하기 위한 DTO
         {
             if(loginSuccess.isSessionExist(request))
             {
-                ReservationEntity reservationEntity = reservationService.ReservationSelect(ReservationId);
-                if (reservationEntity == null) {
+                ReservationDTO reservationDTO = reservationService.ReservationSelect(ReservationId);
+                if (reservationDTO == null) {
                     throw new FindFailedException("결과를 찾을 수 없습니다.");
                 } else {
-                    ReservationDTO reservationDTO = ConvertToDTO(reservationEntity);
                     return ResponseEntity.ok().body(responseDTO.Response("success", "데이터 전송 완료", Collections.singletonList(reservationDTO)));
                 }
             }
@@ -271,14 +250,13 @@ public class ReservationController //고객의 예약을 관리하기 위한 DTO
                 AdministrationEntity administrationEntity = administrationService.FindByAdministrationDate(AdminstrationDate);
                 if(administrationEntity != null)
                 {
-                    ReservationEntity reservationEntity = reservationService.SelectAdminstrationID(administrationEntity.getAdministrationId());
-                    if (reservationEntity == null)
+                    ReservationDTO reservationDTO = reservationService.SelectAdminstrationID(administrationEntity.getAdministrationId());
+                    if (reservationDTO == null)
                     {
                         return ResponseEntity.ok().body(responseDTO.Response("empty", "결과 값이 비어 있습니다."));
                     }
                     else
                     {
-                        ReservationDTO reservationDTO = ConvertToDTO(reservationEntity);
                         return ResponseEntity.ok().body(responseDTO.Response("success", "데이터 전송 완료", Collections.singletonList(reservationDTO)));
                     }
                 }
@@ -296,44 +274,5 @@ public class ReservationController //고객의 예약을 관리하기 위한 DTO
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(responseDTO.Response("error", e.getMessage()));
         }
-    }
-    private ReservationDTO ConvertToDTO(ReservationEntity reservationEntity2)
-    {
-        return ReservationDTO.builder()
-                .reservationId(reservationEntity2.getReservationId())
-                .administrationId(reservationEntity2.getReservationId())
-                .phone(reservationEntity2.getPhone())
-                .address(reservationEntity2.getAddress())
-                .name(reservationEntity2.getName())
-                .acreage(reservationEntity2.getAcreage())
-                .subissionDate(reservationEntity2.getSubissionDate())
-                .type(reservationEntity2.getType())
-                .build();
-    }
-
-    private ReservationEntity ConvertToEntity(ReservationDTO reservationDTO)
-    {
-        return ReservationEntity.builder()
-                .reservationId(reservationDTO.getReservationId())
-                .administrationId(reservationDTO.getAdministrationId())
-                .phone(reservationDTO.getPhone())
-                .address(reservationDTO.getAddress())
-                .name(reservationDTO.getName())
-                .acreage(reservationDTO.getAcreage())
-                .subissionDate(reservationDTO.getSubissionDate())
-                .type(reservationDTO.getType())
-                .build();
-    }
-    private ReservationEntity ConvertToEntity(ReservationDTO reservationDTO, String uniqueId) {
-        return ReservationEntity.builder()
-                .reservationId(uniqueId)
-                .administrationId(uniqueId)
-                .phone(reservationDTO.getPhone())
-                .address(reservationDTO.getAddress())
-                .name(reservationDTO.getName())
-                .acreage(reservationDTO.getAcreage())
-                .subissionDate(reservationDTO.getSubissionDate())
-                .type(reservationDTO.getType())
-                .build();
     }
 }

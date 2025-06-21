@@ -4,15 +4,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import project.MilkyWay.Administration.DTO.AdministrationDTO;
 import project.MilkyWay.Administration.Entity.AdministrationEntity;
 import project.MilkyWay.ComonType.Expection.DeleteFailedException;
 import project.MilkyWay.ComonType.Expection.FindFailedException;
 import project.MilkyWay.ComonType.Expection.InsertFailedException;
 import project.MilkyWay.ComonType.Expection.UpdateFailedException;
 import project.MilkyWay.Administration.Repository.AdministrationRepository;
+import project.MilkyWay.ComonType.LoginSuccess;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -21,20 +24,47 @@ public class AdministrationService
     @Autowired
     AdministrationRepository administrationRepository;
 
-    public AdministrationEntity insert(AdministrationEntity administration)
+    LoginSuccess loginSuccess = new LoginSuccess();
+
+    public AdministrationDTO insert(AdministrationDTO administrationDTO)
     {
+        String uniqueId;
+        do
+        {
+            uniqueId = loginSuccess.generateRandomId(15);
+            boolean bool = FindByAdministrationBool(uniqueId);
+            if(!bool)
+            {
+                break;
+            }
+        }while (true);
+        AdministrationEntity administration = ConvertToEntity(administrationDTO, uniqueId);
         AdministrationEntity administrationEntity = administrationRepository.save(administration);
         if(administrationEntity != null)
         {
-            return administrationEntity;
+            return ConvertToDTO(administrationEntity);
         }
         else
         {
             throw new InsertFailedException("데이터 저장을 시도하였으나, 정상적으로 입력되지 않았습니다.");
         }
     }
-    public AdministrationEntity Update(AdministrationEntity administration)
+    public AdministrationDTO insert(AdministrationDTO administrationDTO, String uniqueId)
     {
+        AdministrationEntity administration = ConvertToEntity(administrationDTO, uniqueId);
+        AdministrationEntity administrationEntity = administrationRepository.save(administration);
+        if(administrationEntity != null)
+        {
+            return ConvertToDTO(administrationEntity);
+        }
+        else
+        {
+            throw new InsertFailedException("데이터 저장을 시도하였으나, 정상적으로 입력되지 않았습니다.");
+        }
+    }
+    public AdministrationDTO Update(AdministrationDTO administrationDTO)
+    {
+        AdministrationEntity administration = ConvertToEntity(administrationDTO);
         AdministrationEntity oldAdmin = administrationRepository.findByAdministrationId(administration.getAdministrationId());
         if(oldAdmin != null)
         {
@@ -43,7 +73,7 @@ public class AdministrationService
             AdministrationEntity findAdmin = administrationRepository.findByAdministrationId(changeAdmin.getAdministrationId());
             if(findAdmin.equals(changeAdmin))
             {
-                return changeAdmin;
+                return ConvertToDTO(changeAdmin);
             }
             else
             {
@@ -101,19 +131,24 @@ public class AdministrationService
         return true;
     }
 
-    public List<AdministrationEntity> FindAll()
+    public List<AdministrationDTO> FindAll()
     {
         List<AdministrationEntity> administrationEntities = administrationRepository.findAll();
         if(administrationEntities != null)
         {
-            return administrationEntities;
+            List<AdministrationDTO> administrationDTOS = new ArrayList<>();
+            for(AdministrationEntity administration : administrationEntities)
+            {
+                administrationDTOS.add(ConvertToDTO(administration));
+            }
+            return administrationDTOS;
         }
         else
         {
             throw new FindFailedException("알 수 없는 오류로 데이터베이스 정보를 찾을 수 없어요! 다시 시도해주세요");
         }
     }
-    public List<AdministrationEntity> FindByAdministrationDateBetween(LocalDate Date)
+    public List<AdministrationDTO> FindByAdministrationDateBetween(LocalDate Date)
     {
         LocalDate LastDate = Date.plusDays(30);
         List<AdministrationEntity> administrationEntities = administrationRepository.findByAdministrationDateBetween(Date,LastDate);
@@ -123,7 +158,12 @@ public class AdministrationService
         }
         else if(administrationEntities != null)
         {
-            return administrationEntities;
+            List<AdministrationDTO> administrationDTOS = new ArrayList<>();
+            for(AdministrationEntity administration : administrationEntities)
+            {
+                administrationDTOS.add(ConvertToDTO(administration));
+            }
+            return administrationDTOS;
         }
         else
         {
@@ -131,12 +171,12 @@ public class AdministrationService
         }
     }
 
-    public AdministrationEntity FindByAdministration(String EncodingAdministrationId)
+    public AdministrationDTO FindByAdministration(String EncodingAdministrationId)
     {
         AdministrationEntity AdministrationEntity = administrationRepository.findByAdministrationId(EncodingAdministrationId);
         if(AdministrationEntity != null)
         {
-            return  AdministrationEntity;
+            return  ConvertToDTO(AdministrationEntity);
         }
         else
         {
@@ -169,5 +209,31 @@ public class AdministrationService
     {
         AdministrationEntity AdministrationEntity = administrationRepository.findByAdministrationDate(subissionDate);
         return  AdministrationEntity;
+    }
+
+    private AdministrationDTO ConvertToDTO(AdministrationEntity administrationEntity)
+    {
+        return AdministrationDTO.builder()
+                .administrationId(administrationEntity.getAdministrationId())
+                .administrationDate(administrationEntity.getAdministrationDate())
+                .adminstrationType(administrationEntity.getAdminstrationType())
+                .build();
+    }
+
+    private AdministrationEntity ConvertToEntity(AdministrationDTO administrationDTO)
+    {
+        return AdministrationEntity.builder()
+                .administrationId(administrationDTO.getAdministrationId())
+                .adminstrationType(administrationDTO.getAdminstrationType())
+                .administrationDate(administrationDTO.getAdministrationDate())
+                .build();
+    }
+    private AdministrationEntity ConvertToEntity(AdministrationDTO administrationDTO, String uniqueId)
+    {
+        return AdministrationEntity.builder()
+                .administrationId(uniqueId)
+                .adminstrationType(administrationDTO.getAdminstrationType())
+                .administrationDate(administrationDTO.getAdministrationDate())
+                .build();
     }
 }

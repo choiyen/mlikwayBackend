@@ -66,21 +66,10 @@ public class AdministrationController
                     }
                     else
                     {
-                        String uniqueId;
-                        do
+
+                        AdministrationDTO administrationDTO1 = administrationService.insert(administrationDTO);
+                        if(administrationDTO1 != null)
                         {
-                            uniqueId = loginSuccess.generateRandomId(15);
-                            boolean bool = administrationService.FindByAdministrationBool(uniqueId);
-                            if(!bool)
-                            {
-                                break;
-                            }
-                        }while (true);
-                        AdministrationEntity administration = ConvertToEntity(administrationDTO, uniqueId);
-                        AdministrationEntity administrationEntity = administrationService.insert(administration);
-                        if(administrationEntity != null)
-                        {
-                            AdministrationDTO administrationDTO1 = ConvertToDTO(administrationEntity);
                             return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO.Response("success","일정 데이터 추가에 성공하셨습니다.", Collections.singletonList(administrationDTO1)));
                         }
                         else
@@ -121,11 +110,9 @@ public class AdministrationController
         {
             if(loginSuccess.isSessionExist(request))
             {
-                AdministrationEntity administration = ConvertToEntity(administrationDTO);
-                AdministrationEntity administrationEntity = administrationService.Update(administration);
-                if(administrationEntity != null)
+                AdministrationDTO administrationDTO1 = administrationService.Update(administrationDTO);
+                if(administrationDTO1 != null)
                 {
-                    AdministrationDTO administrationDTO1 = ConvertToDTO(administrationEntity);
                     return ResponseEntity.ok().body(responseDTO.Response("success","일정 데이터 업데이트에 성공하셨습니다.", Collections.singletonList(administrationDTO1)));
                 }
                 else
@@ -204,10 +191,9 @@ public class AdministrationController
         {
             if(loginSuccess.isSessionExist(request))
             {
-                AdministrationEntity administration = administrationService.FindByAdministration(AdministrationId);
-                if(administration != null)
+                AdministrationDTO administrationDTO = administrationService.FindByAdministration(AdministrationId);
+                if(administrationDTO != null)
                 {
-                    AdministrationDTO administrationDTO = ConvertToDTO(administration);
                     return ResponseEntity.ok().body(responseDTO.Response("success","일정 데이터 찾기 성공", Collections.singletonList(administrationDTO)));
                 }
                 else
@@ -243,26 +229,16 @@ public class AdministrationController
 
             if(Date == null)
             {
-                List<AdministrationEntity> administrationEntities = administrationService.FindAll();
-                if(administrationEntities.isEmpty())
+                List<AdministrationDTO> administrationDTOS = administrationService.FindAll();
+                if(administrationDTOS.isEmpty())
                 {
                     return ResponseEntity.ok().body(responseDTO.Response("empty", "데이터를 조사하였으나, 작성된 예약 일정 없음"));
-                }
-                List<AdministrationDTO> administrationDTOS = new ArrayList<>();
-                for (AdministrationEntity administrationEntity : administrationEntities)
-                {
-                    administrationDTOS.add(ConvertToDTO(administrationEntity));
                 }
                 return ResponseEntity.ok().body(responseDTO.Response("success","데이터베이스에서 일정데이터 전체조회 성공",  administrationDTOS));
             }
             else
             {
-                List<AdministrationEntity> administrationEntities = administrationService.FindByAdministrationDateBetween(Date);
-                List<AdministrationDTO> administrationDTOS = new ArrayList<>();
-                for (AdministrationEntity administrationEntity : administrationEntities)
-                {
-                    administrationDTOS.add(ConvertToDTO(administrationEntity));
-                }
+                List<AdministrationDTO> administrationDTOS = administrationService.FindByAdministrationDateBetween(Date);
                 return ResponseEntity.ok().body(responseDTO.Response("success","데이터베이스에서 일정데이터 전체조회 성공",  administrationDTOS));
             }
         }
@@ -271,31 +247,4 @@ public class AdministrationController
             return ResponseEntity.badRequest().body(responseDTO.Response("error", e.getMessage()));
         }
     } //일정이 없는 날짜에만 고객이 회사의 전체 등록을 알아야 할 테니까, 일단 보류 -> 따로 일정만 가져오는 함수를 만들어야 할 려나?
-
-    private AdministrationDTO ConvertToDTO(AdministrationEntity administrationEntity)
-    {
-        return AdministrationDTO.builder()
-                .administrationId(administrationEntity.getAdministrationId())
-                .administrationDate(administrationEntity.getAdministrationDate())
-                .adminstrationType(administrationEntity.getAdminstrationType())
-                .build();
-    }
-
-    private AdministrationEntity ConvertToEntity(AdministrationDTO administrationDTO)
-    {
-        return AdministrationEntity.builder()
-                .administrationId(administrationDTO.getAdministrationId())
-                .adminstrationType(administrationDTO.getAdminstrationType())
-                .administrationDate(administrationDTO.getAdministrationDate())
-                .build();
-    }
-    private AdministrationEntity ConvertToEntity(AdministrationDTO administrationDTO, String uniqueId)
-    {
-        return AdministrationEntity.builder()
-                .administrationId(uniqueId)
-                .adminstrationType(administrationDTO.getAdminstrationType())
-                .administrationDate(administrationDTO.getAdministrationDate())
-                .build();
-    }
-
 }

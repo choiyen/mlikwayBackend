@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 import project.MilkyWay.Address.DTO.AddressDTO;
+import project.MilkyWay.Administration.DTO.AdministrationDTO;
 import project.MilkyWay.Administration.Entity.AdministrationEntity;
 import project.MilkyWay.Administration.Service.AdministrationService;
 import project.MilkyWay.BoardMain.Board.DTO.BoardDTO;
@@ -52,27 +53,7 @@ public class AddressController {
 
     LoginSuccess loginSuccess = new LoginSuccess();
 
-    @Scheduled(cron = "0 0 18 * * *", zone = "Asia/Seoul")
-    public void scheduledDeleteOldSubmissions() {
-        boolean deleted = addressService.deleteSubmissionBeforeTodayAtSixAM();
-        boolean deletedadmini = administrationService.deleteByAdministrationDateBeforeTodayAtSixAM();
-        if (deleted && deletedadmini) {
-            System.out.println("[삭제 완료] 이전 날짜의 데이터가 성공적으로 삭제되었습니다.");
-        } else {
-            System.out.println("[삭제 미수행] 현재 시간이 오전 6시 이후입니다.");
-        }
-    }
 
-    @PostConstruct
-    public void init() {
-        boolean deleted =addressService.deleteSubmissionBeforeTodayAtSixAM();
-        boolean deletedadmini = administrationService.deleteByAdministrationDateBeforeTodayAtSixAM();
-        if (deleted && deletedadmini) {
-            System.out.println("delete check");
-        } else {
-            System.out.println("delete uncheck");
-        }
-    }
 
     @Operation(
             summary = "Create a new Address",
@@ -90,33 +71,21 @@ public class AddressController {
 
             if(loginSuccess.isSessionExist(request))
             {
-                String uniqueId;
-                do
-                {
-                    uniqueId = loginSuccess.generateRandomId(15);
-                    AddressEntity addressEntity = addressService.findByAddressId(uniqueId);
-                    Boolean bool = administrationService.FindByAdministrationBool(uniqueId);
-                    if(addressEntity == null && !bool)
-                    {
-                        break;
-                    }
-                }while (true);
 
                 AdministrationEntity administration = administrationService.FindByAdministrationDate(addressDTO.getSubmissionDate());
 
                 if(administration == null)
                 {
-                    AddressEntity addressEntity = ConvertToEntity(addressDTO,uniqueId);
-                    AddressEntity addressEntity1 = addressService.insert(addressEntity);
-                    if(addressEntity1 != null)
+
+                    AddressDTO addressDTO1 = addressService.insert(addressDTO);
+                    if(addressDTO1 != null)
                     {
-                        AdministrationEntity administrationEntity = AdministrationEntity.builder()
-                                .administrationId(uniqueId)
+                        AdministrationDTO administrationDTO = AdministrationDTO.builder()
+                                .administrationId(addressDTO1.getAddressId())
                                 .adminstrationType(DateType.업무)
                                 .administrationDate(addressDTO.getSubmissionDate())
                                 .build();
-                        administrationService.insert(administrationEntity);
-                        AddressDTO addressDTO1 = ConvertToDTO(addressEntity1);
+                        administrationService.insert(administrationDTO, addressDTO1.getAddressId());
                         return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO.Response("success","데이터베이스에 주소 데이터 추가", Collections.singletonList(addressDTO1)));
                     }
                     else
@@ -140,17 +109,15 @@ public class AddressController {
                         }
                     }
 
-                    AddressEntity addressEntity = ConvertToEntity(addressDTO,uniqueId);
-                    AddressEntity addressEntity1 = addressService.insert(addressEntity);
-                    if(addressEntity1 != null)
+                    AddressDTO addressDTO1 = addressService.insert(addressDTO);
+                    if(addressDTO1 != null)
                     {
-                        AdministrationEntity administrationEntity = AdministrationEntity.builder()
-                                .administrationId(uniqueId)
+                        AdministrationDTO administrationDTO = AdministrationDTO.builder()
+                                .administrationId(addressDTO1.getAddressId())
                                 .adminstrationType(DateType.업무)
                                 .administrationDate(addressDTO.getSubmissionDate())
                                 .build();
-                        administrationService.insert(administrationEntity);
-                        AddressDTO addressDTO1 = ConvertToDTO(addressEntity1);
+                        administrationService.insert(administrationDTO, addressDTO1.getAddressId());
                         return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO.Response("success","데이터베이스에 주소 데이터 추가", Collections.singletonList(addressDTO1)));
                     }
                     else
@@ -188,11 +155,9 @@ public class AddressController {
         {
             if(loginSuccess.isSessionExist(request))
             {
-                AddressEntity addressEntity = ConvertToEntity(addressDTO);
-                AddressEntity addressEntity1 = addressService.update(addressEntity);
-                if(addressEntity1 != null)
+                AddressDTO addressDTO1 = addressService.update(addressDTO);
+                if(addressDTO1 != null)
                 {
-                    AddressDTO addressDTO1 = ConvertToDTO(addressEntity1);
                     return ResponseEntity.ok().body(responseDTO.Response("success","데이터베이스에 주소 데이터 수정", Collections.singletonList(addressDTO1)));
                 }
                 else
@@ -274,19 +239,12 @@ public class AddressController {
             if(loginSuccess.isSessionExist(request))
             {
 
-                Page<AddressEntity> addressEntityList = addressService.findALL(page);
-                if(addressEntityList.isEmpty())
+                PageDTO pageDTO = addressService.findALL(page);
+                if(pageDTO.getList().isEmpty())
                 {
                     return ResponseEntity.ok().body(responseDTO.Response("success","데이터베이스에 내용은 비어있음"));
                 }
                 else {
-                    List<AddressDTO> addressDTOS = new ArrayList<>();
-                    for (AddressEntity addressEntity : addressEntityList) {
-                        addressDTOS.add(ConvertToDTO(addressEntity));
-                    }
-                    PageDTO pageDTO = PageDTO.<AddressDTO>builder().list(addressDTOS)
-                            .PageCount(addressEntityList.getTotalPages())
-                            .Total(addressEntityList.getTotalElements()).build();
 
                     return ResponseEntity.ok().body(responseDTO.Response("success","데이터베이스에 주소 데이터 조회 성공",pageDTO));
                 }
@@ -319,10 +277,9 @@ public class AddressController {
         {
             if(loginSuccess.isSessionExist(request))
             {
-                AddressEntity addressEntity = addressService.findByAddressId(AddressId);
-                if(addressEntity != null)
+                AddressDTO addressDTO = addressService.findByAddressId(AddressId);
+                if(addressDTO != null)
                 {
-                    AddressDTO addressDTO = ConvertToDTO(addressEntity);
                     return ResponseEntity.ok().body(responseDTO.Response("success", "데이터 조회 성공", Collections.singletonList(addressDTO)));
                 }
                 else
@@ -355,10 +312,9 @@ public class AddressController {
         {
             if(loginSuccess.isSessionExist(request))
             {
-                AddressEntity addressEntity = addressService.FindBySubmissionDate(AdminstrationDate);
-                if(addressEntity != null)
+                AddressDTO addressDTO = addressService.FindBySubmissionDate(AdminstrationDate);
+                if(addressDTO != null)
                 {
-                    AddressDTO addressDTO = ConvertToDTO(addressEntity);
                     return ResponseEntity.ok().body(responseDTO.Response("success", "데이터 조회 성공", Collections.singletonList(addressDTO)));
                 }
                 else
@@ -375,44 +331,6 @@ public class AddressController {
         {
             return ResponseEntity.badRequest().body(responseDTO.Response("error",e.getMessage()));
         }
-    }
-
-    private AddressDTO ConvertToDTO(AddressEntity addressEntity1)
-    {
-        return AddressDTO.builder()
-                .addressId(addressEntity1.getAddressId())
-                .address(addressEntity1.getAddress())
-                .customer(addressEntity1.getCustomer())
-                .phoneNumber(addressEntity1.getPhoneNumber())
-                .submissionDate(addressEntity1.getSubmissionDate())
-                .acreage(addressEntity1.getAcreage())
-                .cleanType(addressEntity1.getCleanType())
-                .build();
-    }
-
-    private AddressEntity ConvertToEntity(AddressDTO addressDTO, String uniqueId)
-    {
-        return AddressEntity.builder()
-                .addressId(uniqueId)
-                .address(addressDTO.getAddress())
-                .customer(addressDTO.getCustomer())
-                .phoneNumber(addressDTO.getPhoneNumber())
-                .submissionDate(addressDTO.getSubmissionDate())
-                .acreage(addressDTO.getAcreage())
-                .cleanType(addressDTO.getCleanType())
-                .build();
-    }
-    private AddressEntity ConvertToEntity(AddressDTO addressDTO)
-    {
-        return AddressEntity.builder()
-                .addressId(addressDTO.getAddressId())
-                .address(addressDTO.getAddress())
-                .customer(addressDTO.getCustomer())
-                .phoneNumber(addressDTO.getPhoneNumber())
-                .submissionDate(addressDTO.getSubmissionDate())
-                .acreage(addressDTO.getAcreage())
-                .cleanType(addressDTO.getCleanType())
-                .build();
     }
 
 }

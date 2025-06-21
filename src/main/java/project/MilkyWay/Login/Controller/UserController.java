@@ -85,9 +85,7 @@ public class UserController //관리자 아이디를 관리하는 DTO
     {
         try
         {
-            UserEntity userEntity = ConvertToEntity(userDTO, passwordEncoder);
-            UserEntity newUserEntity = userService.createUser(userEntity);
-            UserDTO userDTO1 = ConvertToDTO(newUserEntity);
+            UserDTO userDTO1 = userService.createUser(userDTO, passwordEncoder);
             return ResponseEntity.ok().body(responseDTO.Response("success", "관리자 권한 등록 성공", Collections.singletonList(userDTO1)));
         }
         catch (Exception e)
@@ -108,7 +106,7 @@ public class UserController //관리자 아이디를 관리하는 DTO
     public ResponseEntity<?> UserLogin(@RequestBody @Valid LoginDTO loginDTO, HttpServletRequest request) {
         try
         {
-            UserEntity user = userService.existUser(loginDTO);
+            UserDTO user = userService.existUser(loginDTO);
 
             if (user == null || !passwordEncoder.matches(loginDTO.getPassword(), user.getPassword())) {
                 throw new AuthenticationException("Invalid username or password");
@@ -138,8 +136,7 @@ public class UserController //관리자 아이디를 관리하는 DTO
             request.getSession().setAttribute("userId", user.getUserId());
 
             // 사용자 DTO 반환
-            UserDTO user1 = ConvertToDTO(user);
-            return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO.Response("success", "관리자 로그인 성공", Collections.singletonList(user1)));
+            return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO.Response("success", "관리자 로그인 성공", Collections.singletonList(user)));
         }
         catch (AuthenticationException e)
         {
@@ -219,9 +216,8 @@ public class UserController //관리자 아이디를 관리하는 DTO
         {
             if(loginSuccess.isSessionExist(request))
             {
-                UserEntity userEntity = ConvertToEntity(NewuserDTO, passwordEncoder);
-                UserEntity userEntity2 = userService.UpdateUser(userEntity.getUserId(), userEntity);
-                UserDTO userDTO1 = ConvertToDTO(userEntity2);
+
+                UserDTO userDTO1 = userService.UpdateUser(NewuserDTO, passwordEncoder);
                 return ResponseEntity.ok().body(responseDTO.Response("success", "관리자 권한 수정 성공", Collections.singletonList(userDTO1)));
             }
             else
@@ -294,12 +290,7 @@ public class UserController //관리자 아이디를 관리하는 DTO
     {
         try
         {
-            List<UserEntity> userEntity = userService.findEmail(email);
-            List<UserDTO> userDTOS = new ArrayList<>();
-            for(UserEntity user : userEntity)
-            {
-                userDTOS.add(ConvertToDTO(user));
-            }
+            List<UserDTO> userDTOS = userService.findEmail(email);
             return ResponseEntity.ok().body(responseDTO.Response("success", "관리자 정보 찾기 성공", userDTOS));
         }
         catch (Exception e)
@@ -334,25 +325,5 @@ public class UserController //관리자 아이디를 관리하는 DTO
         }
 
     }
-
-
-
-    private UserEntity ConvertToEntity(UserDTO userDTO, PasswordEncoder passwordEncoder)
-    {
-        return UserEntity.builder()
-                .userId(userDTO.getUserId())
-                .email(userDTO.getEmail())
-                .password(passwordEncoder.encode(userDTO.getPassword()))
-                .build();
-    }
-    private UserDTO ConvertToDTO(UserEntity userEntity)
-    {
-        return UserDTO.builder()
-                .userId(userEntity.getUserId())
-                .email(userEntity.getEmail())
-                .password(userEntity.getPassword())
-                .build();
-    }
-
 }
 

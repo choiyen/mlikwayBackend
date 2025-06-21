@@ -61,13 +61,7 @@ public class QuestionsController //고객 질문을 관리하기 위한 DTO
         {
             if(loginSuccess.isSessionExist(request))
             {
-                QuestionsEntity questionsEntity = ConVertToEntity(questionsDTO);
-                List<QuestionsEntity> questionsEntity1 = questionsService.Insertquestion(questionsEntity);
-                List<QuestionsDTO> questionsDTOS = new ArrayList<>();
-                for(QuestionsEntity questionsEntity2 : questionsEntity1)
-                {
-                    questionsDTOS.add(ConVertToDTO(questionsEntity2));
-                }
+                List<QuestionsDTO> questionsDTOS = questionsService.Insertquestion(questionsDTO);
                 return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO.Response("success", "질문 등록에 성공하였습니다." , questionsDTOS));
             }
             else
@@ -100,12 +94,10 @@ public class QuestionsController //고객 질문을 관리하기 위한 DTO
         {
             if(loginSuccess.isSessionExist(request))
             {
-                QuestionsEntity questionsEntity = ConVertToEntity(newquestionsDTO);
-                QuestionsEntity questionsEntity1 = questionsService.updatequestion(questionsEntity.getId(), questionsEntity);
-                if(questionsEntity1 != null)
+                QuestionsDTO questionsDTO = questionsService.updatequestion(newquestionsDTO);
+                if(questionsDTO != null)
                 {
-                    QuestionsDTO questionsDTO1 = ConVertToDTO(questionsEntity1);
-                    return ResponseEntity.ok().body(responseDTO.Response("success", "질문 데이터 업데이트에 성공하였습니다.", Collections.singletonList(questionsDTO1)));
+                    return ResponseEntity.ok().body(responseDTO.Response("success", "질문 데이터 업데이트에 성공하였습니다.", Collections.singletonList(questionsDTO)));
                 }
                 else
                 {
@@ -182,10 +174,9 @@ public class QuestionsController //고객 질문을 관리하기 위한 DTO
     {
         try
         {
-            QuestionsEntity questionsEntity = questionsService.SelectQuestion(QuestionId);
-            if(questionsEntity != null)
+            QuestionsDTO questionsDTO = questionsService.SelectQuestion(QuestionId);
+            if(questionsDTO != null)
             {
-                QuestionsDTO questionsDTO = ConVertToDTO(questionsEntity);
                 return ResponseEntity.ok().body(responseDTO.Response("success", "질문 데이터 찾기에 성공하였습니다.", Collections.singletonList(questionsDTO)));
             }
             else
@@ -212,19 +203,15 @@ public class QuestionsController //고객 질문을 관리하기 위한 DTO
     {
         try
         {
-            List<QuestionsEntity> questionsEntities = questionsService.findAll();
+            List<QuestionsDTO> questionsDTOS = questionsService.findAll();
 
-            if(questionsEntities.isEmpty())
+            if(questionsDTOS.isEmpty())
             {
                 return ResponseEntity.ok().body(responseDTO.Response("findnot","질문 조회를 시도했으나, 데이터가 비어있습니다."));
             }
             else
             {
-                List<QuestionsDTO> questionsDTOS = new ArrayList<>();
-                for(QuestionsEntity questionsEntity : questionsEntities)
-                {
-                    questionsDTOS.add(ConVertToDTO(questionsEntity));
-                }
+
                 return ResponseEntity.ok().body(responseDTO.Response("success","질문 데이터 조회에 성공했습니다.",questionsDTOS));
             }
         }
@@ -246,19 +233,14 @@ public class QuestionsController //고객 질문을 관리하기 위한 DTO
     {
         try
         {
-            List<QuestionsEntity> questionsEntities = questionsService.findAll2(page);
+            List<QuestionsDTO> questionsDTOS = questionsService.findAll2(page);
 
-            if(questionsEntities.isEmpty())
+            if(questionsDTOS.isEmpty())
             {
                 return ResponseEntity.ok().body(responseDTO.Response("findnot","질문 조회를 시도했으나, 데이터가 비어있습니다."));
             }
             else
             {
-                List<QuestionsDTO> questionsDTOS = new ArrayList<>();
-                for(QuestionsEntity questionsEntity : questionsEntities)
-                {
-                    questionsDTOS.add(ConVertToDTO(questionsEntity));
-                }
                 PageDTO pageDTO = PageDTO.<QuestionsDTO>builder()
                         .list(questionsDTOS)
                         .Total(questionsService.totalRecord())
@@ -271,21 +253,5 @@ public class QuestionsController //고객 질문을 관리하기 위한 DTO
         {
             return ResponseEntity.badRequest().body(responseDTO.Response("error", e.getMessage() ));
         }
-    }
-    private QuestionsEntity ConVertToEntity(QuestionsDTO questionsDTO)
-    {
-        return QuestionsEntity.builder()
-                .id(questionsDTO.getId())
-                .exceptionQA(questionsDTO.getExceptionQA())
-                .expectedComment(questionsDTO.getExpectedComment())
-                .build();
-    }
-    private QuestionsDTO ConVertToDTO(QuestionsEntity questionsEntity)
-    {
-        return QuestionsDTO.builder()
-                .id(questionsEntity.getId())
-                .exceptionQA(questionsEntity.getExceptionQA())
-                .expectedComment(questionsEntity.getExpectedComment())
-                .build();
     }
 }

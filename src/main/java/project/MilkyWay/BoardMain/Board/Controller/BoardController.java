@@ -18,6 +18,7 @@ import project.MilkyWay.BoardMain.Board.DTO.BoardDTO;
 
 import project.MilkyWay.BoardMain.Board.Entity.BoardEntity;
 import project.MilkyWay.BoardMain.Board.Service.BoardService;
+import project.MilkyWay.BoardMain.Comment.DTO.CommentDTO;
 import project.MilkyWay.BoardMain.Comment.Entity.CommentEntity;
 import project.MilkyWay.BoardMain.Comment.Service.CommentService;
 import project.MilkyWay.ComonType.DTO.PageDTO;
@@ -59,23 +60,10 @@ public class BoardController
     {
         try
         {
-            String uniqueId;
-            LoginSuccess loginSuccess = new LoginSuccess();
-            do
-            {
-                uniqueId = loginSuccess.generateRandomId(15);
-                BoardEntity boardEntity = boardService.FindByBoardId(uniqueId);
-                if(boardEntity == null)
-                {
-                    break;
-                }
-            }while (true);
 
-            BoardEntity boardEntity = ConvertToBoardEntity(boardDTO, uniqueId);
-            BoardEntity boardEntity1 = boardService.Insert(boardEntity);
-            if(boardEntity1 != null)
+            BoardDTO boardDTO1 = boardService.Insert(boardDTO);
+            if(boardDTO1 != null)
             {
-                BoardDTO boardDTO1 = ConvertToBoardDTO(boardEntity1);
                 return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO.Response("success","게시판 데이터 추가 완료", Collections.singletonList(boardDTO1)));
             }
             else
@@ -106,11 +94,9 @@ public class BoardController
     {
         try
         {
-            BoardEntity boardEntity = ConvertToBoardEntity(boardDTO);
-            BoardEntity boardEntity2 = boardService.Update(boardEntity);
-            if(boardEntity2 != null)
+            BoardDTO boardDTO1 = boardService.Update(boardDTO);
+            if(boardDTO1 != null)
             {
-                BoardDTO boardDTO1 = ConvertToBoardDTO(boardEntity2);
                 return ResponseEntity.ok().body(responseDTO.Response("success","게시판 데이터 업데이트 완료", Collections.singletonList(boardDTO1)));
             }
             else
@@ -146,15 +132,15 @@ public class BoardController
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();  // 사용자 이름
 
-            BoardEntity boardEntity = boardService.FindByBoardId(boardCheckDTO.getBoardId());
-            if(username.equals("anonymousUser") && !boardEntity.getPassword().equals(boardCheckDTO.getPassword()))
+            BoardDTO boardDTO = boardService.FindByBoardId(boardCheckDTO.getBoardId());
+            if(username.equals("anonymousUser") && !boardDTO.getPassword().equals(boardCheckDTO.getPassword()))
             {
                 throw new RuntimeException("삭제를 위한 비밀번호를 다시 입력해주세요");
             }
-            List<CommentEntity> list = new ArrayList<>(commentService.FindByBoardId(boardEntity.getBoardId(), false));
+            List<CommentDTO> list = new ArrayList<>(commentService.FindByBoardId(boardDTO.getBoardId(), false));
             if(!list.isEmpty())
             {
-                for(CommentEntity comment : list)
+                for(CommentDTO comment : list)
                 {
                     commentService.Delete(comment.getCommentId());
                 }
@@ -192,19 +178,12 @@ public class BoardController
         try
         {
 
-            Page<BoardEntity> boardEntities = boardService.FindAll(page);
-            List<BoardDTO> boardDTOS = new ArrayList<>();
-            for(BoardEntity boardEntity : boardEntities) {
-                boardDTOS.add(ConvertToBoardDTO(boardEntity));
-            }
-            if(boardDTOS.isEmpty())
+            PageDTO pageDTO = boardService.FindAll(page);
+            if(pageDTO.getList().isEmpty())
             {
                 return ResponseEntity.ok().body(responseDTO.Response("empty","데이터베이스에 내용은 비어있음"));
             }
             else {
-                PageDTO pageDTO = PageDTO.<BoardDTO>builder().list(boardDTOS)
-                        .PageCount(boardEntities.getTotalPages())
-                        .Total(boardEntities.getTotalElements()).build();
                 return ResponseEntity.<PageDTO>ok().body(responseDTO.Response("success","데이터 조회 완료!", pageDTO));
             }
         }
@@ -227,12 +206,10 @@ public class BoardController
     {
         try 
         {
-            BoardEntity boardEntity = boardService.FindByBoardId(BoardId);
-            if(boardEntity != null)
+            BoardDTO boardDTO = boardService.FindByBoardId(BoardId);
+            if(boardDTO != null)
             {
-                BoardDTO boardDTO1 = ConvertToBoardDTO(boardEntity);
-                return ResponseEntity.ok().body(responseDTO.Response("success","게시판 데이터 조회완료", Collections.singletonList(boardDTO1)));
-
+                return ResponseEntity.ok().body(responseDTO.Response("success","게시판 데이터 조회완료", Collections.singletonList(boardDTO)));
             }
             else
             {
@@ -243,33 +220,4 @@ public class BoardController
             return ResponseEntity.badRequest().body(responseDTO.Response("error", e.getMessage()));
         }
     }
-    private BoardDTO ConvertToBoardDTO(BoardEntity boardEntity1)
-    {
-        return BoardDTO.builder()
-                .boardId(boardEntity1.getBoardId())
-                .content(boardEntity1.getContent())
-                .title(boardEntity1.getTitle())
-                .password(boardEntity1.getPassword())
-                .build();
-    }
-
-    private BoardEntity ConvertToBoardEntity(BoardDTO boardDTO)
-    {
-        return BoardEntity.builder()
-                .boardId(boardDTO.getBoardId())
-                .content(boardDTO.getContent())
-                .title(boardDTO.getTitle())
-                .password(boardDTO.getPassword())
-                .build();
-    }
-    private BoardEntity ConvertToBoardEntity(BoardDTO boardDTO, String uniqueId)
-    {
-        return BoardEntity.builder()
-                .boardId(uniqueId)
-                .content(boardDTO.getContent())
-                .title(boardDTO.getTitle())
-                .password(boardDTO.getPassword())
-                .build();
-    }
-
 }

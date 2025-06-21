@@ -54,23 +54,9 @@ public class InqurieController
     {
         try
         {
-            String uniqueId = "";
-            LoginSuccess loginSuccess = new LoginSuccess();
-            do
+            InquireDTO inquireDTO1 = inquireService.Insert(inquireDTO);
+            if (inquireDTO1 != null)
             {
-                uniqueId = loginSuccess.generateRandomId(15);
-                InquireEntity inquireEntity = inquireService.FindByInquireId(uniqueId);
-                if(inquireEntity == null)
-                {
-                    break;
-                }
-            }while (true);
-
-            InquireEntity inquireEntity1 = ConvertToEntity(inquireDTO, uniqueId);
-            InquireEntity inquireEntity2 = inquireService.Insert(inquireEntity1);
-            if (inquireEntity2 != null)
-            {
-                InquireDTO inquireDTO1 = ConvertToDTO(inquireEntity2);
                 return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO.Response("success", "데이터 추가에 성공했습니다.", Collections.singletonList(inquireDTO1)));
             }
             else
@@ -149,10 +135,9 @@ public class InqurieController
         {
             if(loginSuccess.isSessionExist(request))
             {
-                InquireEntity inquireEntity = inquireService.Update(inquireUpdateDto.getInqurieId());
-                if(inquireEntity != null)
+                InquireDTO inquireDTO = inquireService.Check(inquireUpdateDto.getInqurieId());
+                if(inquireDTO != null)
                 {
-                    InquireDTO inquireDTO = ConvertToDTO(inquireEntity);
                     return ResponseEntity.ok().body(responseDTO.Response("success","고객 문의 확인 완료", Collections.singletonList(inquireDTO)));
                 }
                 else
@@ -187,20 +172,13 @@ public class InqurieController
         {
             if(loginSuccess.isSessionExist(request))
             {
-                Page<InquireEntity> inquireEntities = inquireService.findAll(page);
-                List<InquireDTO> inquireDTOS = new ArrayList<>();
-                for(InquireEntity inquireEntity : inquireEntities)
-                {
-                    inquireDTOS.add(ConvertToDTO(inquireEntity));
-                }
-                if(inquireDTOS.isEmpty())
+                PageDTO pageDTO = inquireService.findAll(page);
+
+                if(pageDTO.getList().isEmpty())
                 {
                     return ResponseEntity.ok().body(responseDTO.Response("empty","데이터베이스에 내용은 비어있음"));
                 }
                 else {
-                    PageDTO pageDTO = PageDTO.<InquireDTO>builder().list(inquireDTOS)
-                            .PageCount(inquireEntities.getTotalPages())
-                            .Total(inquireEntities.getTotalElements()).build();
                     return ResponseEntity.ok().body(responseDTO.Response("success", "데이터 조회에 성공했습니다.", pageDTO));
                 }
             }
@@ -231,10 +209,9 @@ public class InqurieController
         {
             if(loginSuccess.isSessionExist(request))
             {
-                InquireEntity inquireEntity = inquireService.FindByInquireId(InquireId);
-                if(inquireEntity != null)
+                InquireDTO inquireDTO = inquireService.FindByInquireId(InquireId);
+                if(inquireDTO != null)
                 {
-                    InquireDTO inquireDTO = ConvertToDTO(inquireEntity);
                     return ResponseEntity.ok().body(responseDTO.Response("success","데이터 전공 완료!", Collections.singletonList(inquireDTO)));
                 }
                 else
@@ -252,46 +229,6 @@ public class InqurieController
             return ResponseEntity.badRequest().body(responseDTO.Response("error", e.getMessage()));
         }
     }
-
-    private InquireEntity ConvertToEntity(InquireDTO inquireDTO)
-    {
-        return InquireEntity.builder()
-                .inquireId(inquireDTO.getInquireId())
-                .address(inquireDTO.getAddress())
-                .phoneNumber(inquireDTO.getPhoneNumber())
-                .inquire(inquireDTO.getInquire())
-                .dateOfInquiry(inquireDTO.getDateOfInquiry())
-                .inquirename(inquireDTO.getInquirename())
-                .build();
-    }
-    //uniqueId
-    private InquireEntity ConvertToEntity(InquireDTO inquireDTO, String uniqueId)
-    {
-        return InquireEntity.builder()
-                .inquireId(uniqueId)
-                .address(inquireDTO.getAddress())
-                .phoneNumber(inquireDTO.getPhoneNumber())
-                .inquire(inquireDTO.getInquire())
-                .inquirename(inquireDTO.getInquirename())
-                .dateOfInquiry(inquireDTO.getDateOfInquiry())
-                .inquireBool(inquireDTO.getInquireBool())
-                .build();
-    }
-
-    private InquireDTO ConvertToDTO(InquireEntity inquireEntity)
-    {
-        return InquireDTO.builder()
-                .inquireId(inquireEntity.getInquireId())
-                .address(inquireEntity.getAddress())
-                .phoneNumber(inquireEntity.getPhoneNumber())
-                .inquire(inquireEntity.getInquire())
-                .dateOfInquiry(inquireEntity.getDateOfInquiry())
-                .inquirename(inquireEntity.getInquirename())
-                .inquireBool(inquireEntity.getInquireBool())
-                .build();
-    }
-
-
 }
 //- 상담 신청이 들어온 날짜에서 1주일이 지날 경우, 자동 페기하는 스케줄러 등록
 //상담 신청을 받기 위한 DTO

@@ -7,12 +7,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import project.MilkyWay.ComonType.DTO.PageDTO;
+import project.MilkyWay.ComonType.LoginSuccess;
+import project.MilkyWay.Inquire.DTO.InquireDTO;
 import project.MilkyWay.Inquire.Entity.InquireEntity;
 import project.MilkyWay.ComonType.Expection.DeleteFailedException;
 import project.MilkyWay.ComonType.Expection.FindFailedException;
 import project.MilkyWay.ComonType.Expection.InsertFailedException;
 import project.MilkyWay.ComonType.Expection.UpdateFailedException;
 import project.MilkyWay.Inquire.Repository.InqurieRepository;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Service
@@ -21,24 +27,30 @@ public class InquireService
     @Autowired
     InqurieRepository inqurieRepository;
 
-    public InquireEntity Insert(InquireEntity inquireEntity)
+    public InquireDTO Insert(InquireDTO inquireDTOs)
     {
-        boolean bool = inqurieRepository.existsByInquireId(inquireEntity.getInquireId());
-        if(bool)
+
+        String uniqueId;
+        LoginSuccess loginSuccess = new LoginSuccess();
+        do
         {
-            throw new FindFailedException("해당 inquireId를 가진 정보는 이미 존재해요.");
-        }
-        else
-        {
+            uniqueId = loginSuccess.generateRandomId(15);
+            if(!inqurieRepository.existsByInquireId(uniqueId))
+            {
+                break;
+            }
+        }while (true);
+
+            InquireEntity inquireEntity = ConvertToEntity(inquireDTOs, uniqueId);
             InquireEntity inquireEntity1 = inqurieRepository.save(inquireEntity);
             if (inquireEntity1 != null) {
-                return inquireEntity1;
+                return ConvertToDTO(inquireEntity1);
             } else {
                 throw new InsertFailedException("날짜 가능 문의 등록이 실패하였습니다.");
             }
-        }
+
     }
-    public InquireEntity Update(String encodinginquireId)
+    public InquireDTO Check(String encodinginquireId)
     {
 
         InquireEntity inquireEntity1 = inqurieRepository.findByInquireId(encodinginquireId);
@@ -49,7 +61,7 @@ public class InquireService
             InquireEntity saveinquire = inqurieRepository.findByInquireId(newinquireEntity2.getInquireId());
             if(saveinquire.equals(inquireEntity2))
             {
-                return inquireEntity2;
+                return ConvertToDTO(inquireEntity2);
             }
             else
             {
@@ -61,22 +73,30 @@ public class InquireService
             throw new FindFailedException("수정할 질문 내역을 찾지 못하였습니다.");
         }
     }
-    public InquireEntity FindByInquireId(String encodingInquireId)
+    public InquireDTO FindByInquireId(String encodingInquireId)
     {
-        InquireEntity inquireEntity = inqurieRepository.findByInquireId(encodingInquireId);
-            return inquireEntity;
+        return ConvertToDTO(inqurieRepository.findByInquireId(encodingInquireId));
     }
     private boolean existByinquireId(String inquireId)
     {
         return inqurieRepository.existsByInquireId(inquireId);
     }
-    public Page<InquireEntity> findAll(int page)
+    public PageDTO findAll(int page)
     {
         Pageable pageable = PageRequest.of(page, 10);
         Page<InquireEntity> InquireEntity = inqurieRepository.findAll(pageable);
         if(InquireEntity != null)
         {
-            return InquireEntity;
+            List<InquireDTO> inquireDTOS = new ArrayList<>();
+            for(InquireEntity inquireEntity : InquireEntity)
+            {
+                inquireDTOS.add(ConvertToDTO(inquireEntity));
+            }
+            PageDTO pageDTO = PageDTO.<InquireDTO>builder().list(inquireDTOS)
+                    .PageCount(InquireEntity.getTotalPages())
+                    .Total(InquireEntity.getTotalElements()).build();
+
+            return pageDTO;
         }
         else
         {
@@ -112,7 +132,43 @@ public class InquireService
                 .inquireBool(!oldinquireEntity.getInquireBool())
                 .build();
     }
+    private InquireEntity ConvertToEntity(InquireDTO inquireDTO)
+    {
+        return InquireEntity.builder()
+                .inquireId(inquireDTO.getInquireId())
+                .address(inquireDTO.getAddress())
+                .phoneNumber(inquireDTO.getPhoneNumber())
+                .inquire(inquireDTO.getInquire())
+                .dateOfInquiry(inquireDTO.getDateOfInquiry())
+                .inquirename(inquireDTO.getInquirename())
+                .build();
+    }
+    //uniqueId
+    private InquireEntity ConvertToEntity(InquireDTO inquireDTO, String uniqueId)
+    {
+        return InquireEntity.builder()
+                .inquireId(uniqueId)
+                .address(inquireDTO.getAddress())
+                .phoneNumber(inquireDTO.getPhoneNumber())
+                .inquire(inquireDTO.getInquire())
+                .inquirename(inquireDTO.getInquirename())
+                .dateOfInquiry(inquireDTO.getDateOfInquiry())
+                .inquireBool(inquireDTO.getInquireBool())
+                .build();
+    }
 
+    private InquireDTO ConvertToDTO(InquireEntity inquireEntity)
+    {
+        return InquireDTO.builder()
+                .inquireId(inquireEntity.getInquireId())
+                .address(inquireEntity.getAddress())
+                .phoneNumber(inquireEntity.getPhoneNumber())
+                .inquire(inquireEntity.getInquire())
+                .dateOfInquiry(inquireEntity.getDateOfInquiry())
+                .inquirename(inquireEntity.getInquirename())
+                .inquireBool(inquireEntity.getInquireBool())
+                .build();
+    }
 }
 //- 상담 신청이 들어온 날짜에서 1주일이 지날 경우, 자동 페기하는 스케줄러 등록
 //상담 신청을 받기 위한 DTO

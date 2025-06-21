@@ -64,16 +64,13 @@ public class CommentController
         {
             if(loginSuccess.isSessionExist(httpServletRequest))
             {
-                BoardEntity boardEntity = boardService.FindByBoardId(commentDTO.getBoardId());
-                if(boardEntity != null)
+                BoardDTO boardDTO = boardService.FindByBoardId(commentDTO.getBoardId());
+                if(boardDTO != null)
                 {
-                    CommentEntity commentEntity = ConvertToCommentEntity(commentDTO, "관리자");
-
-                    CommentEntity comment = commentService.Insert(commentEntity);
+                    CommentDTO comment = commentService.Insert(commentDTO,"관리자");
                     if(comment != null)
                     {
-                        CommentDTO commentDTO1 = ConvertToCommentDTO(comment);
-                        return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO.Response("success", "게시판에 댓글 등록 완료!", Collections.singletonList(commentDTO1)));
+                        return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO.Response("success", "게시판에 댓글 등록 완료!", Collections.singletonList(comment)));
                     }
                     else
                     {
@@ -87,19 +84,16 @@ public class CommentController
             }
             else
             {
-                BoardEntity boardEntity = boardService.FindByBoardId(commentDTO.getBoardId());
+                BoardDTO boardEntity = boardService.FindByBoardId(commentDTO.getBoardId());
                 if(boardEntity != null)
                 {
-                    if(boardEntity.getPassword().equals(commentDTO.getPassword()) == false)
+                    if(!boardEntity.getPassword().equals(commentDTO.getPassword()))
                         throw new RuntimeException("무단 댓글 입력 방지용 비번 오류");
 
-                    CommentEntity commentEntity = ConvertToCommentEntity(commentDTO);
-
-                    CommentEntity comment = commentService.Insert(commentEntity);
+                    CommentDTO comment = commentService.Insert(commentDTO, "고객");
                     if(comment != null)
                     {
-                        CommentDTO commentDTO1 = ConvertToCommentDTO(comment);
-                        return ResponseEntity.ok().body(responseDTO.Response("success", "게시판에 댓글 등록 완료!", Collections.singletonList(commentDTO1)));
+                        return ResponseEntity.ok().body(responseDTO.Response("success", "게시판에 댓글 등록 완료!", Collections.singletonList(comment)));
                     }
                     else
                     {
@@ -141,12 +135,10 @@ public class CommentController
         {
             if(loginSuccess.isSessionExist(request))
             {
-                CommentEntity commentEntity = ConvertToCommentEntity(commentDTO);
-                CommentEntity comment = commentService.Update(commentDTO.getCommentId(), commentEntity);
+                CommentDTO comment = commentService.Update(commentDTO);
                 if(comment != null)
                 {
-                    CommentDTO commentDTO1 = ConvertToCommentDTO(comment);
-                    return ResponseEntity.ok().body(responseDTO.Response("success","데이터 변경 완료!", Collections.singletonList(commentDTO1)));
+                    return ResponseEntity.ok().body(responseDTO.Response("success","데이터 변경 완료!", Collections.singletonList(comment)));
                 }
                 else
                 {
@@ -187,8 +179,8 @@ public class CommentController
         {
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
                 String username = authentication.getName();  // 사용자 이름
-                BoardEntity boardEntity = boardService.FindByBoardId(commentDeteteDTO.getBoardId());
-                if(username != "anonymousUser" || boardEntity.getPassword().equals(commentDeteteDTO.getPassword()))
+                BoardDTO boardDTO = boardService.FindByBoardId(commentDeteteDTO.getBoardId());
+                if(username != "anonymousUser" || boardDTO.getPassword().equals(commentDeteteDTO.getPassword()))
                 {
                     boolean bool = commentService.Delete(commentDeteteDTO.getCommentId());
                     if(bool)
@@ -226,16 +218,14 @@ public class CommentController
     {
         try
         {
-            CommentEntity commentEntity = commentService.FindByCommentId(CommentId);
-            if(commentEntity != null)
+            CommentDTO commentDTO = commentService.FindByCommentId(CommentId);
+            if(commentDTO != null)
             {
-                CommentDTO commentDTO = ConvertToCommentDTO(commentEntity);
                 return ResponseEntity.ok().body(responseDTO.Response("success","데이터 찾기에 성공하였습니다.", Collections.singletonList(commentDTO)));
             }
             else
             {
                 throw new UpdateFailedException("알 수 없는 오류로 데이터 찾기에 실패했습니다.");
-
             }
         }
         catch (Exception e)
@@ -257,12 +247,7 @@ public class CommentController
     {
         try
         {
-            List<CommentEntity> commentEntities = commentService.FindByBoardId(BoardId,true);
-            List<CommentDTO> commentDTOS = new ArrayList<>();
-            for(CommentEntity comment : commentEntities)
-            {
-                commentDTOS.add(ConvertToCommentDTO(comment));
-            }
+            List<CommentDTO> commentDTOS = commentService.FindByBoardId(BoardId,true);
             if(commentDTOS.isEmpty())
             {
                 throw new FindFailedException("데이터가 비어있습니다. 다시 시도해주세요");
@@ -275,39 +260,5 @@ public class CommentController
         {
             return ResponseEntity.badRequest().body(responseDTO.Response("error", e.getMessage()));
         }
-    }
-
-
-
-    private CommentDTO ConvertToCommentDTO(CommentEntity comment)
-    {
-        return CommentDTO.builder()
-                .type(UserType.valueOf(comment.getType()))
-                .commentId(comment.getCommentId())
-                .boardId(comment.getBoardId())
-                .comment(comment.getComment())
-                .createdAt(comment.getCreatedAt())
-                .build();
-    }
-
-    private CommentEntity ConvertToCommentEntity(@Valid CommentDTO commentDTO)
-    {
-        return CommentEntity.builder()
-                .type(String.valueOf(commentDTO.getType()))
-                .commentId(commentDTO.getCommentId())
-                .boardId(commentDTO.getBoardId())
-                .comment(commentDTO.getComment())
-                .createdAt(commentDTO.getCreatedAt())
-                .build();
-    }
-    private CommentEntity ConvertToCommentEntity(@Valid CommentDTO commentDTO, String provider)
-    {
-        return CommentEntity.builder()
-                .type(provider)
-                .commentId(commentDTO.getCommentId())
-                .boardId(commentDTO.getBoardId())
-                .comment(commentDTO.getComment())
-                .createdAt(commentDTO.getCreatedAt())
-                .build();
     }
 }

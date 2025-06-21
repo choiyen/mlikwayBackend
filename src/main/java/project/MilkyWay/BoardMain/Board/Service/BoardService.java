@@ -9,14 +9,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import project.MilkyWay.BoardMain.Board.DTO.BoardDTO;
 import project.MilkyWay.BoardMain.Board.Entity.BoardEntity;
 import project.MilkyWay.BoardMain.Board.Repository.BoardRepository;
+import project.MilkyWay.ComonType.DTO.PageDTO;
 import project.MilkyWay.ComonType.Expection.DeleteFailedException;
 import project.MilkyWay.ComonType.Expection.FindFailedException;
 import project.MilkyWay.ComonType.Expection.InsertFailedException;
 import project.MilkyWay.ComonType.Expection.UpdateFailedException;
+import project.MilkyWay.ComonType.LoginSuccess;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -26,20 +30,34 @@ public class BoardService
     BoardRepository boardRepository;
 
 
-    public BoardEntity Insert(BoardEntity boardEntity)
+    public BoardDTO Insert(BoardDTO boardDTO)
     {
-        BoardEntity BoardEntity1 = boardRepository.save(boardEntity);
-        if(BoardEntity1 != null)
+        String uniqueId;
+        LoginSuccess loginSuccess = new LoginSuccess();
+        do
         {
-            return BoardEntity1;
+            uniqueId = loginSuccess.generateRandomId(15);
+            BoardDTO boardDTO1 = FindByBoardId(uniqueId);
+            if(boardDTO1 == null)
+            {
+                break;
+            }
+        }while (true);
+
+        BoardEntity boardEntity = ConvertToBoardEntity(boardDTO, uniqueId);
+        BoardEntity savedEntity = boardRepository.save(boardEntity);
+        if(savedEntity != null)
+        {
+            return ConvertToBoardDTO(savedEntity);
         }
         else
         {
             throw new InsertFailedException("날짜 가능 문의 등록이 실패하였습니다.");
         }
     }
-    public BoardEntity Update(BoardEntity boardEntity)
+    public BoardDTO Update(BoardDTO boardDTO)
     {
+        BoardEntity boardEntity = ConvertToBoardEntity(boardDTO);
         BoardEntity BeforeBoardEntity = boardRepository.findByBoardId(boardEntity.getBoardId());
         if(BeforeBoardEntity != null)
         {
@@ -47,7 +65,7 @@ public class BoardService
             BoardEntity boardEntity1 = boardRepository.save(AfterBoardEntity);
             BoardEntity ChangeBoardEntity = boardRepository.findByBoardId(boardEntity1.getBoardId());
             if(ChangeBoardEntity.equals(boardEntity1)) {
-                return boardEntity1;
+                return ConvertToBoardDTO(boardEntity1);
             }
             else
             {
@@ -82,24 +100,40 @@ public class BoardService
             throw new FindFailedException("해당 코드로 삭제할 수 있는 게시판이 존재하지 않아요");
         }
     }
-    public Page<BoardEntity> FindAll(int page)
+    public PageDTO FindAll(int page)
     {
 
         Pageable pageable = PageRequest.of(page, 10);
-        Page<BoardEntity> boardEntity = boardRepository.findAll(pageable);
-        if(boardEntity != null)
+        Page<BoardEntity> boardEntitys = boardRepository.findAll(pageable);
+        List<BoardDTO> boardDTOS = new ArrayList<>();
+        for(BoardEntity boardEntity : boardEntitys) {
+            boardDTOS.add(ConvertToBoardDTO(boardEntity));
+        }
+
+        if(boardDTOS != null)
         {
-            return  boardEntity;
+            PageDTO pageDTO = PageDTO.<BoardDTO>builder().list(boardDTOS)
+                    .PageCount(boardEntitys.getTotalPages())
+                    .Total(boardEntitys.getTotalElements()).build();
+
+            return  pageDTO;
         }
         else
         {
             throw new FindFailedException("전체 게시판 데이터를 찾을 수 없었어요. 알 수 없는 오류!!");
         }
     }
-    public BoardEntity FindByBoardId(String EncodingBoardId)
+    public BoardDTO FindByBoardId(String EncodingBoardId)
     {
         BoardEntity boardEntity = boardRepository.findByBoardId(EncodingBoardId);
-            return boardEntity;
+        if(boardEntity != null)
+        {
+            return ConvertToBoardDTO(boardRepository.findByBoardId(EncodingBoardId));
+        }
+        else
+        {
+            return null;
+        }
     }
     public boolean Bool(String EncodingBoardId)
     {
@@ -112,6 +146,34 @@ public class BoardService
                 .title(boardEntity.getTitle())
                 .content(boardEntity.getContent())
                 .password(boardEntity.getPassword())
+                .build();
+    }
+    private BoardDTO ConvertToBoardDTO(BoardEntity boardEntity1)
+    {
+        return BoardDTO.builder()
+                .boardId(boardEntity1.getBoardId())
+                .content(boardEntity1.getContent())
+                .title(boardEntity1.getTitle())
+                .password(boardEntity1.getPassword())
+                .build();
+    }
+
+    private BoardEntity ConvertToBoardEntity(BoardDTO boardDTO)
+    {
+        return BoardEntity.builder()
+                .boardId(boardDTO.getBoardId())
+                .content(boardDTO.getContent())
+                .title(boardDTO.getTitle())
+                .password(boardDTO.getPassword())
+                .build();
+    }
+    private BoardEntity ConvertToBoardEntity(BoardDTO boardDTO, String uniqueId)
+    {
+        return BoardEntity.builder()
+                .boardId(uniqueId)
+                .content(boardDTO.getContent())
+                .title(boardDTO.getTitle())
+                .password(boardDTO.getPassword())
                 .build();
     }
 }

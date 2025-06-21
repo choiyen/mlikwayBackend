@@ -1,8 +1,10 @@
 package project.MilkyWay.Login.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import project.MilkyWay.Login.DTO.LoginDTO;
+import project.MilkyWay.Login.DTO.UserDTO;
 import project.MilkyWay.Login.Entity.UserEntity;
 import project.MilkyWay.ComonType.Expection.DeleteFailedException;
 import project.MilkyWay.ComonType.Expection.FindFailedException;
@@ -10,6 +12,7 @@ import project.MilkyWay.ComonType.Expection.InsertFailedException;
 import project.MilkyWay.ComonType.Expection.UpdateFailedException;
 import project.MilkyWay.Login.Mapper.UserMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -18,16 +21,17 @@ public class UserService //관리자 아이디를 관리하는 DTO
     @Autowired
     private UserMapper userMapper;
 
-  public UserEntity createUser(UserEntity user)
+  public UserDTO createUser(UserDTO userDTO, PasswordEncoder passwordEncoder)
   {
-      UserEntity user2 = userMapper.FindByUserId(user.getUserId());
+      UserEntity userEntity = ConvertToEntity(userDTO, passwordEncoder);
+      UserEntity user2 = userMapper.FindByUserId(userEntity.getUserId());
       if(user2 == null)
       {
-          userMapper.Insert(user);
-          UserEntity newUser = userMapper.FindByUserId(user.getUserId());
+          userMapper.Insert(userEntity);
+          UserEntity newUser = userMapper.FindByUserId(userEntity.getUserId());
           if(newUser != null)
           {
-              return newUser;
+              return ConvertToDTO(newUser);
           }
           else
           {
@@ -40,12 +44,12 @@ public class UserService //관리자 아이디를 관리하는 DTO
       }
 
   }
-  public UserEntity existUser(LoginDTO loginDTO)
+  public UserDTO existUser(LoginDTO loginDTO)
   {
       UserEntity newUser = userMapper.FindByUserId(loginDTO.getUserId());
       if(newUser != null)
       {
-          return newUser;
+          return ConvertToDTO(newUser);
       }
       else
       {
@@ -56,17 +60,18 @@ public class UserService //관리자 아이디를 관리하는 DTO
 
 
 
-  public UserEntity UpdateUser(String userId, UserEntity user)
+  public UserDTO UpdateUser(UserDTO NewuserDTO, PasswordEncoder passwordEncoder)
   {
-      UserEntity previousUser = userMapper.FindByUserId(userId);
+      UserEntity userEntity = ConvertToEntity(NewuserDTO, passwordEncoder);
+      UserEntity previousUser = userMapper.FindByUserId(userEntity.getUserId());
       if(previousUser != null)
       {
-          UserEntity ChangeUser = ChangeUserEntity(previousUser, user);
-          userMapper.Update(user);
-          UserEntity newUser = userMapper.FindByUserId(userId);
+          UserEntity ChangeUser = ChangeUserEntity(previousUser, userEntity);
+          userMapper.Update(ChangeUser);
+          UserEntity newUser = userMapper.FindByUserId(ChangeUser.getUserId());
           if(newUser.getUserId().equals(ChangeUser.getUserId()) && newUser.getPassword().equals(ChangeUser.getPassword())&& newUser.getEmail().equals(ChangeUser.getEmail()))
           {
-              return newUser;
+              return ConvertToDTO(newUser);
           }
           else
           {
@@ -91,12 +96,17 @@ public class UserService //관리자 아이디를 관리하는 DTO
           throw new DeleteFailedException("삭제할 아이디가 없거나 정보가 틀립니다.");
       }
   }
-  public List<UserEntity> findEmail(String email)
+  public List<UserDTO> findEmail(String email)
   {
         List<UserEntity> user = userMapper.FindByEmail(email);
         if(user != null)
         {
-            return user;
+            List<UserDTO> userDTOS = new ArrayList<>();
+            for(UserEntity userEntity : user)
+            {
+                userDTOS.add(ConvertToDTO(userEntity));
+            }
+            return userDTOS;
         }
         else
         {
@@ -112,5 +122,20 @@ public class UserService //관리자 아이디를 관리하는 DTO
               .build();
   }
 
-
+    private UserEntity ConvertToEntity(UserDTO userDTO, PasswordEncoder passwordEncoder)
+    {
+        return UserEntity.builder()
+                .userId(userDTO.getUserId())
+                .email(userDTO.getEmail())
+                .password(passwordEncoder.encode(userDTO.getPassword()))
+                .build();
+    }
+    private UserDTO ConvertToDTO(UserEntity userEntity)
+    {
+        return UserDTO.builder()
+                .userId(userEntity.getUserId())
+                .email(userEntity.getEmail())
+                .password(userEntity.getPassword())
+                .build();
+    }
 }

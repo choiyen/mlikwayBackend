@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import project.MilkyWay.Question.DTO.QuestionsDTO;
 import project.MilkyWay.Question.Entity.QuestionsEntity;
 import project.MilkyWay.ComonType.Expection.DeleteFailedException;
 import project.MilkyWay.ComonType.Expection.FindFailedException;
@@ -22,30 +23,37 @@ public class QuestionsService //고객 질문을 관리하기 위한 DTO
     @Autowired
     QuestionsMapper questionsMapper;
 
-    public List<QuestionsEntity> Insertquestion(QuestionsEntity newQuestionEntity)
+public List<QuestionsDTO> Insertquestion(QuestionsDTO questionsDTO)
     {
+        QuestionsEntity newQuestionEntity = ConVertToEntity(questionsDTO);
         questionsMapper.Insert(newQuestionEntity);
         List<QuestionsEntity> questionsEntity = questionsMapper.findAll();
         if(questionsEntity != null)
         {
-            return  questionsEntity;
+            List<QuestionsDTO> questionsDTOS = new ArrayList<>();
+            for(QuestionsEntity questionsEntity1 : questionsEntity)
+            {
+                questionsDTOS.add(ConVertToDTO(questionsEntity1));
+            }
+            return  questionsDTOS;
         }
         else
         {
             throw new InsertFailedException("해당 질문 데이터를 추가할 수 없습니다.");
         }
     }
-    public QuestionsEntity updatequestion(Long encodingquestionId, QuestionsEntity newQuestionEntity)
+    public QuestionsDTO updatequestion(QuestionsDTO newquestionsDTO)
     {
-        QuestionsEntity questionsEntity = questionsMapper.findById(encodingquestionId);
-        if(questionsEntity != null)
+        QuestionsEntity newQuestionEntity = ConVertToEntity(newquestionsDTO);
+        QuestionsEntity OldQuestion = questionsMapper.findById(newquestionsDTO.getId());
+        if(OldQuestion != null)
         {
-            QuestionsEntity changeQuestionEntity = ChangeToQuestion(questionsEntity, newQuestionEntity);
+            QuestionsEntity changeQuestionEntity = ChangeToQuestion(OldQuestion, newQuestionEntity);
             questionsMapper.Update(changeQuestionEntity);
-            QuestionsEntity ChangeDate = questionsMapper.findById(encodingquestionId);
+            QuestionsEntity ChangeDate = questionsMapper.findById(OldQuestion.getId());
             if(ChangeDate.getId().equals(changeQuestionEntity.getId()) && ChangeDate.getExceptionQA().equals(changeQuestionEntity.getExceptionQA())&&ChangeDate.getExpectedComment().equals(changeQuestionEntity.getExpectedComment()))
             {
-                return ChangeDate;
+                return ConVertToDTO(ChangeDate);
             }
             else
             {
@@ -80,27 +88,38 @@ public class QuestionsService //고객 질문을 관리하기 위한 DTO
         }
     }
 
-    public List<QuestionsEntity> findAll()
+    public List<QuestionsDTO> findAll()
     {
         List<QuestionsEntity> list = questionsMapper.findAll();
-        return list;
+        List<QuestionsDTO> questionsDTOS = new ArrayList<>();
+        for(QuestionsEntity questionsEntity : list)
+        {
+            questionsDTOS.add(ConVertToDTO(questionsEntity));
+        }
+        return questionsDTOS;
     }
-    public QuestionsEntity SelectQuestion(Long encodingquestionId)
+    public QuestionsDTO SelectQuestion(Long encodingquestionId)
     {
         QuestionsEntity questionsEntity = questionsMapper.findById(encodingquestionId);
         if(questionsEntity != null)
         {
-            return questionsEntity;
+            return ConVertToDTO(questionsEntity);
         }
         else
         {
             throw new FindFailedException("해당 질문코드를 지닌 데이터는 없어요.");
         }
     }
-    public List<QuestionsEntity> findAll2(Integer page)
+    public List<QuestionsDTO> findAll2(Integer page)
     {
         List<QuestionsEntity> list = new ArrayList<>(questionsMapper.findAll2(page, 10));
-        return list;
+        List<QuestionsDTO> questionsDTOS = new ArrayList<>();
+
+        for(QuestionsEntity questionsEntity : list)
+        {
+            questionsDTOS.add(ConVertToDTO(questionsEntity));
+        }
+        return questionsDTOS;
     }
     public Long totalRecord() {
         return questionsMapper.totalRecord();
@@ -123,5 +142,20 @@ public class QuestionsService //고객 질문을 관리하기 위한 DTO
                 .build();
     }
 
-
+    private QuestionsEntity ConVertToEntity(QuestionsDTO questionsDTO)
+    {
+        return QuestionsEntity.builder()
+                .id(questionsDTO.getId())
+                .exceptionQA(questionsDTO.getExceptionQA())
+                .expectedComment(questionsDTO.getExpectedComment())
+                .build();
+    }
+    private QuestionsDTO ConVertToDTO(QuestionsEntity questionsEntity)
+    {
+        return QuestionsDTO.builder()
+                .id(questionsEntity.getId())
+                .exceptionQA(questionsEntity.getExceptionQA())
+                .expectedComment(questionsEntity.getExpectedComment())
+                .build();
+    }
 }

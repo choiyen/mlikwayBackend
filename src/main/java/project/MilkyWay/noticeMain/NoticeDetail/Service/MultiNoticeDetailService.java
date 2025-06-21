@@ -34,17 +34,16 @@ public class MultiNoticeDetailService
     }
 
     @Async("taskExecutor")
-    public CompletableFuture<List<NoticeDetailEntity>> S3Import(String noticeId, List<NoticeDetailDTO> noticeDetailDTOS, Map<String, List<String>> uploadedFileUrls) {
-        List<CompletableFuture<NoticeDetailEntity>> futures = new ArrayList<>();
+    public CompletableFuture<List<NoticeDetailDTO>> S3Import(String noticeId, List<NoticeDetailDTO> noticeDetailDTOS, Map<String, List<String>> uploadedFileUrls) {
+        List<CompletableFuture<NoticeDetailDTO>> futures = new ArrayList<>();
 
         for (int i = 0; i < noticeDetailDTOS.size(); i++) {
             final int index = i;  // 람다 안에서 사용하려면 final 혹은 effectively final 필요
-            CompletableFuture<NoticeDetailEntity> future = CompletableFuture.supplyAsync(() -> {
+            CompletableFuture<NoticeDetailDTO> future = CompletableFuture.supplyAsync(() -> {
                 List<String> beforeUrls = uploadedFileUrls.getOrDefault("before_" + index, new ArrayList<>());
                 List<String> afterUrls  = uploadedFileUrls.getOrDefault("after_" + index, new ArrayList<>());
 
-                NoticeDetailEntity noticeDetailEntity = ConvertToNoticeDetail(noticeDetailDTOS.get(index), noticeId, beforeUrls, afterUrls);
-                NoticeDetailEntity savedEntity = noticeDetailService.InsertNoticeDetallMapper(noticeDetailEntity);
+                NoticeDetailDTO savedEntity = noticeDetailService.InsertNoticeDetallMapper(noticeDetailDTOS.get(index), noticeId, beforeUrls, afterUrls);
                 System.out.println(savedEntity);
 
                 if (savedEntity == null) {
