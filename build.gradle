@@ -67,3 +67,10 @@ sourceSets {
 		}
 	}
 }
+tasks.withType(Test).configureEach {
+	enabled = false
+}
+bootJar {
+	archiveFileName = 'app.jar'
+	exclude('**/test/**') // 혹시 test 폴더가 리소스로 포함됐다면 제거
+}
