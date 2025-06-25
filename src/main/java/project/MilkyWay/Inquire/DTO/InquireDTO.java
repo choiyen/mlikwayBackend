@@ -25,7 +25,10 @@ public class InquireDTO
 
     @NotBlank(message = "Address cannot be empty")
     @Size(min = 5, message = "Address는 최소 다섯자리 이상 입력해야 함.")
-    @Pattern(regexp = "^[a-zA-Z0-9가-힣\\s]*$", message = "주소는 대소문자, 한글, 숫자, 공백만 입력 가능합니다.")
+    @Pattern(
+            regexp = "^[a-zA-Z0-9가-힣\\s\\-#(),~·]+$",
+            message = "주소는 한글, 영어, 숫자, 공백, 일부 특수문자(- # ( ) , ~ ·)만 입력 가능합니다."
+    )
     @Schema(description = "문의 주소", example = "경상남도 진주시 석촌동")
     @JsonProperty("address")
     private String address;
