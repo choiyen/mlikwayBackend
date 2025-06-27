@@ -35,18 +35,18 @@ import java.util.Collections;
 import java.util.List;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@WebMvcTest(AddressController.class)
-@Import(TestSecurityConfig.class)  // ✅ 테스트용 보안 설정 추가
+@WebMvcTest(AddressController.class) // 어떤 클래스를 TEST할 것인 결정
+@Import(TestSecurityConfig.class)  // 테스트할 적에 Spring Security의 조건을 목업으로 처리하기 위함
 public class AddressControllerTest {
 
     @Autowired
-    private MockMvc mockMvc;
+    private MockMvc mockMvc;//TEST를 진행하기 위해 필요한 목업 객체
 
     @MockBean
-    private AddressService addressService;
+    private AddressService addressService;//목업으로 채워넣은 가짜 객체(실제 Repository에 접근하지 않음)
 
     @MockBean
-    private AdministrationService administrationService;
+    private AdministrationService administrationService;//(단, 관계성이 있다면 조건을 맞춰줘야 함)
 
     ResponseDTO responseDTO = new ResponseDTO();
 
@@ -99,7 +99,8 @@ public class AddressControllerTest {
                 .andExpect(jsonPath("$.data[0].customer").value("홍길동"))
                 .andExpect(jsonPath("$.data[0].cleanType").value("이사청소"));
     }
-
+    //즉, mockMvc를 이용해서 실제 동작이 수행됨을 확인하는 개념
+    //실제 서비스를 만들기 전에 테스트용 틀을 만들어서 흐름이 잘 동작하는지 미리 점검하는 도구에 가까움
 
     @Test
     public void testFindById_Success() throws Exception {

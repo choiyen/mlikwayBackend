@@ -57,7 +57,7 @@ public class AdministrationControllerTest
 
 
     @Test
-    public void testCreateAddress() throws Exception {
+    public void testCreateAdministration() throws Exception {
         // given (테스트용 mock DTO, Entity 생성)
         AdministrationDTO administrationmockDTO = AdministrationDTO.builder()
                 .administrationId("AFDSFBSFDSadsdds1459")
@@ -87,6 +87,10 @@ public class AdministrationControllerTest
                 .andExpect(jsonPath("$.data[0].administrationDate").value("2025-06-25"))
                 .andExpect(jsonPath("$.data[0].adminstrationType").value("업무"));
     }
+
+
+
+
     @Test
     public void testFindById_Success() throws Exception {
         String administrationId = "AFDSFBSFDSadsdds1459";
