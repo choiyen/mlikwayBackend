@@ -29,7 +29,7 @@ import project.MilkyWay.Config.TestSecurityConfig;
 import java.time.LocalDate;
 import java.util.Collections;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -116,6 +116,14 @@ public class BoardControllerTest
         Mockito.when(commentService.FindByBoardId(BoardmockDTO.getBoardId(), false))
                 .thenReturn(Collections.emptyList());
         //댓글 목록이 존재하는지 여부 확인 - 있으면 동시 삭제 진행
+        // 댓글 목록 없다고 모킹
+        Mockito.when(commentService.FindByBoardId(anyString(), eq(false)))
+                .thenReturn(Collections.emptyList());
+
+        // (필요하면) 댓글 삭제도 모킹
+        Mockito.when(commentService.Delete(anyLong()))
+                .thenReturn(true);
+
 
         // ✅ 삭제 mocking
         Mockito.when(boardService.Delete(boardCheckDTO.getBoardId()))
@@ -129,4 +137,6 @@ public class BoardControllerTest
                 .andExpect(jsonPath("$.resultType").value("success"))
                 .andExpect(jsonPath("$.message").value("데이터 삭제 완료! 못미더우시면 DB를 확인해봐요!"));
     }
+    //mockMvc를 통한 Test 시 코드 작성했을 때 쓸 모든 조건에 대하여  Mockito.when으로 test를 진행해야 한다.
+    //단, donoting으로 해당 service의 함수가 void일 때 사용할 수 있다.
 }
