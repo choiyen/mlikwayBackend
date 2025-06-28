@@ -74,7 +74,7 @@ public class CommentController
                     }
                     else
                     {
-                        throw new FindFailedException("게시판에 데이터 등록 완료");
+                        throw new FindFailedException("게시판에 댓글 등록을 시도했으나, 데이터가 등록되지 않음");
                     }
                 }
                 else
@@ -97,7 +97,7 @@ public class CommentController
                     }
                     else
                     {
-                        throw new FindFailedException("게시판에 데이터 등록 완료");
+                        throw new FindFailedException("게시판에 댓글 등록을 시도했으나, 데이터가 등록되지 않음");
                     }
                 }
                 else

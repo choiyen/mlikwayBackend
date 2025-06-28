@@ -14,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
+import project.MilkyWay.Address.DTO.AddressDTO;
 import project.MilkyWay.Administration.Controller.AdministrationController;
 import project.MilkyWay.Administration.DTO.AdministrationDTO;
 import project.MilkyWay.BoardMain.Board.Controller.BoardController;
@@ -30,8 +31,7 @@ import java.time.LocalDate;
 import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -139,4 +139,108 @@ public class BoardControllerTest
     }
     //mockMvc를 통한 Test 시 코드 작성했을 때 쓸 모든 조건에 대하여  Mockito.when으로 test를 진행해야 한다.
     //단, donoting으로 해당 service의 함수가 void일 때 사용할 수 있다.
+
+    @Test
+    public void testUpdate_Success() throws Exception {
+        BoardDTO boardUpdatingMockDTO = BoardDTO.builder()
+                .boardId("dfsdfw@656")
+                .title("현재 TEST 진행 중입니다.")
+                .content("뭘해야 하는지 모르겠어요")
+                .password("youn@DFAE123")
+                .build();
+        BoardDTO boardUpdatedMockDTO = BoardDTO.builder()
+                .boardId("dfsdfw@656")
+                .title("현재 TEST 진행 중입니다.")
+                .content("뭘해야 하는지 모르겠어요")
+                .password("youn@DFAE123")
+                .build();
+
+        Mockito.when(loginSuccess.isSessionExist(Mockito.any(HttpServletRequest.class))).thenReturn(true);
+
+        Mockito.when(boardService.Update(Mockito.any(BoardDTO.class)))
+                .thenReturn(boardUpdatedMockDTO);
+
+
+        mockMvc.perform(put("/api/board/Update")
+                        .sessionAttr("userId", "testUserId")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(boardUpdatingMockDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultType").value("success"))
+                .andExpect(jsonPath("$.message").value("게시판 데이터 업데이트 완료"))
+                .andExpect(jsonPath("$.data[0].title").value("현재 TEST 진행 중입니다."))
+                .andExpect(jsonPath("$.data[0].content").value("뭘해야 하는지 모르겠어요"));
+
+    }
+
+    @Test
+    public void testUpdate_SessionNotExist() throws Exception {
+        BoardDTO boardUpdatingMockDTO = BoardDTO.builder()
+                .boardId("dfsdfw@656")
+                .title("현재 TEST 진행 중입니다.")
+                .content("뭘해야 하는지 모르겠어요")
+                .password("youn@DFAE123")
+                .build();
+
+        // 세션이 없다고 가정
+        Mockito.when(loginSuccess.isSessionExist(Mockito.any(HttpServletRequest.class))).thenReturn(false);
+
+        mockMvc.perform(put("/api/board/Update")
+                        .sessionAttr("userId", "testUserId")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(boardUpdatingMockDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.resultType").value("error"))
+                .andExpect(jsonPath("$.message").value("데이터베이스의 데이터를 수정하는데 실패했습니다. 알 수 없는 오류가 발생했어요."));
+
+        // update()는 아예 호출되지 않아야 함
+//        Mockito.verify(addressService, Mockito.never()).update(Mockito.any(AddressDTO.class));
+    } //로그인을 하지 않은 상황을 가정
+
+    @Test
+    public void testUpdate_FailedUpdate() throws Exception {
+        BoardDTO boardUpdatingMockDTO = BoardDTO.builder()
+                .boardId("dfsdfw@656")
+                .title("현재 TEST 진행 중입니다.")
+                .content("뭘해야 하는지 모르겠어요")
+                .password("youn@DFAE123")
+                .build();
+
+        Mockito.when(loginSuccess.isSessionExist(Mockito.any(HttpServletRequest.class))).thenReturn(true);
+
+        // 업데이트 실패 시 null 반환하도록 모킹
+        Mockito.when(boardService.Update(Mockito.any(BoardDTO.class))).thenReturn(null);
+
+        mockMvc.perform(put("/api/board/Update")
+                        .sessionAttr("userId", "testUserId")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(boardUpdatingMockDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.resultType").value("error"))
+                .andExpect(jsonPath("$.message").value("데이터베이스의 데이터를 수정하는데 실패했습니다. 알 수 없는 오류가 발생했어요."));
+    } //업데이트 실패 상황을 가정
+
+    @Test
+    public void testFindById_Success() throws Exception {
+        String boardId = "dfsdfw@656";
+        BoardDTO boardMockDTO = BoardDTO.builder()
+                .boardId("dfsdfw@656")
+                .title("현재 TEST 진행 중입니다.")
+                .content("뭘해야 하는지 모르겠어요")
+                .password("youn@DFAE123")
+                .build();
+        // 세션이 있다고 가정
+        Mockito.when(loginSuccess.isSessionExist(Mockito.any(HttpServletRequest.class))).thenReturn(true);
+
+        // 서비스가 DTO 반환하도록 모킹
+        Mockito.when(boardService.FindByBoardId(boardId)).thenReturn(boardMockDTO);
+
+        mockMvc.perform(get("/api/board/search")
+                        .param("BoardId", boardId)
+                        .sessionAttr("userId", "testUserId")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultType").value("success"))
+                .andExpect(jsonPath("$.data[0].boardId").value(boardId));
+    }
 }

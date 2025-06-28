@@ -129,7 +129,7 @@ public class InqurieController
             }
     )
     @PutMapping
-    public ResponseEntity<?> Update(HttpServletRequest request,@RequestBody InquireUpdateDto inquireUpdateDto)
+    public ResponseEntity<?> check(HttpServletRequest request,@RequestBody InquireUpdateDto inquireUpdateDto)
     {
         try
         {

@@ -37,7 +37,7 @@ public class BoardDTO {
 
     @NotBlank(message = "Password cannot be empty")
     @Size(min = 8, max = 15, message = "비밀번호는 최소 8자리 이상 15자리 이하의 문자여야 함")
-    @Pattern(regexp = "(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+={}|\\[\\]:;\"'<>,.?/`~-]).+$", message = "대소문자, 숫자, 특수문자가 모두 포함된 문자열만 입력 가능합니다.")
+    @Pattern(regexp = "(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+={}|\\[\\]:;\"'<>,.?/`~-]).+$", message = "password는 대소문자, 숫자, 특수문자가 모두 포함된 문자열만 입력 가능합니다.")
     @Schema(description = "게시판을 제어하기 위한 비밀번호", example = "asdZXC@123")
     @JsonProperty("password")
     private String password; //비밀번호
