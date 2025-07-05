@@ -28,7 +28,6 @@ import project.MilkyWay.ComonType.LoginSuccess;
 import project.MilkyWay.Config.SessionManager;
 import project.MilkyWay.Login.DTO.LoginDTO;
 import project.MilkyWay.Login.DTO.UserDTO;
-import project.MilkyWay.Login.Entity.UserEntity;
 import project.MilkyWay.ComonType.Expection.DeleteFailedException;
 import project.MilkyWay.Reservation.DTO.ReservationDTO;
 import project.MilkyWay.Login.Service.UserService;
@@ -277,6 +276,7 @@ public class UserController //관리자 아이디를 관리하는 DTO
     }
 
 
+
     @Operation(
             summary = "Returns UserDTO object for a given email",
             description = "This API retrieves an User based on the provided email and returns the corresponding UserDTO object.",
@@ -285,7 +285,7 @@ public class UserController //관리자 아이디를 관리하는 DTO
                     @ApiResponse(responseCode = "404", description = "User not found")
             }
     )
-    @PostMapping("/search")
+    @GetMapping("/search")
     public ResponseEntity<?> Userfind(@RequestParam String email)
     {
         try
@@ -298,6 +298,29 @@ public class UserController //관리자 아이디를 관리하는 DTO
             return ResponseEntity.badRequest().body(responseDTO.Response("error", e.getMessage()));
         }
     } //데이터 CRUD 정상 동작 확인
+    @Operation(
+            summary = "Returns UserDTO object for a given email",
+            description = "This API retrieves an User based on the provided email and returns the corresponding UserDTO object.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "User found successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDTO.class))),
+                    @ApiResponse(responseCode = "404", description = "User not found")
+            }
+    )
+    @GetMapping("/search/password")
+    public ResponseEntity<?> UserPassword(@RequestParam String email, @RequestParam String id)
+    {
+        try
+        {
+            UserDTO userDTO = userService.findPassword(email,id, passwordEncoder);
+            return ResponseEntity.ok().body(responseDTO.Response("success", "관리자 정보 찾기 성공", Collections.singletonList(userDTO)));
+        }
+        catch (Exception e)
+        {
+            return ResponseEntity.badRequest().body(responseDTO.Response("error", e.getMessage()));
+        }
+    } //데이터 CRUD 정상 동작 확인
+
+
     @PostMapping("/check")
     public ResponseEntity<?> UserCheck(HttpServletRequest request)
     {

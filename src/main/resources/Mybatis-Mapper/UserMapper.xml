@@ -33,6 +33,15 @@
         FROM User
         WHERE email = #{email, typeHandler=project.MilkyWay.Config.AESStringTypeHandler}
     </select>
+    <select id="FindByEmailAndUserId"
+            parameterType="String"
+            resultType= "project.MilkyWay.Login.Entity.UserEntity">
+        SELECT userId,
+        password,
+        email
+        FROM User
+        WHERE email = #{email, typeHandler=project.MilkyWay.Config.AESStringTypeHandler} AND userId = #{userId}
+    </select>
 
     <!-- 회원 삭제 -->
     <delete id="deleteByUserId"
@@ -62,4 +71,6 @@
         email    = #{email, typeHandler=project.MilkyWay.Config.AESStringTypeHandler}
         WHERE userId = #{userId}
     </update>
+
+
 </mapper>

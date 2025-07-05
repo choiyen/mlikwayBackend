@@ -12,5 +12,6 @@ public interface UserMapper {
     void Insert(UserEntity user);
     void Update(UserEntity user);
     List<UserEntity> FindByEmail(String email);
+    UserEntity FindByEmailAndUserId(String email, String userId);
 
 }

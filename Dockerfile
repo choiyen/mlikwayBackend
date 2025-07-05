@@ -13,3 +13,4 @@ EXPOSE 8000
 # 실행 명령어
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
+# 진짜 어렵네네ㄷㄷㄷㄷㄷ

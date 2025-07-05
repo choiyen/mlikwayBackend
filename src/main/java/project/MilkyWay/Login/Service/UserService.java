@@ -12,7 +12,9 @@ import project.MilkyWay.ComonType.Expection.InsertFailedException;
 import project.MilkyWay.ComonType.Expection.UpdateFailedException;
 import project.MilkyWay.Login.Mapper.UserMapper;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -83,6 +85,7 @@ public class UserService //관리자 아이디를 관리하는 DTO
           throw new FindFailedException("회원정보에 해당 아이디는 존재하지 않아요");
       }
   }
+
   public boolean DeleteUser(String userId)
   {
       UserEntity user = userMapper.FindByUserId(userId);
@@ -113,6 +116,60 @@ public class UserService //관리자 아이디를 관리하는 DTO
             throw new FindFailedException("해당 정보의 회원은 존재하지 않아요.");
         }
   }
+  private String createTempPassword() {
+        int length = 10;
+        String upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        String lower = "abcdefghijklmnopqrstuvwxyz";
+        String digits = "0123456789";
+        String special = "!@#$%^&*()-_=+[]{}|;:,.<>?";
+        String allChars = upper + lower + digits + special;
+        SecureRandom random = new SecureRandom();
+        List<Character> passwordChars = new ArrayList<>();
+
+        // 각 조건별 최소 1개씩 무조건 추가
+        passwordChars.add(upper.charAt(random.nextInt(upper.length())));
+        passwordChars.add(lower.charAt(random.nextInt(lower.length())));
+        passwordChars.add(digits.charAt(random.nextInt(digits.length())));
+        passwordChars.add(special.charAt(random.nextInt(special.length())));
+
+        // 나머지 길이만큼 랜덤 채우기
+        for (int i = 4; i < length; i++) {
+            passwordChars.add(allChars.charAt(random.nextInt(allChars.length())));
+        }
+
+        // 리스트를 무작위로 섞기 (셔플)
+        Collections.shuffle(passwordChars, random);
+
+        // StringBuilder로 변환
+        StringBuilder sb = new StringBuilder();
+        for (char c : passwordChars) {
+            sb.append(c);
+        }
+
+        return sb.toString();
+    }
+
+    public UserDTO findPassword(String email, String userId, PasswordEncoder passwordEncoder)
+    {
+        UserEntity user = userMapper.FindByEmailAndUserId(email, userId);
+        if(user != null)
+        {
+            UserDTO userDTO = UserDTO.builder()
+                    .userId(userId)
+                    .email(email)
+                    .password(createTempPassword())
+                    .build();
+            UserEntity userEntity1 = ConvertToEntity(userDTO, passwordEncoder);
+            userMapper.Update(userEntity1);
+            return userDTO;
+        }
+        else
+        {
+            throw new FindFailedException("해당 정보의 회원은 존재하지 않아요.");
+        }
+    }
+
+
   private UserEntity ChangeUserEntity(UserEntity previousUser, UserEntity newUser)
   {
       return UserEntity.builder()
